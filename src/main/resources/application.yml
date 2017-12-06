@@ -1,0 +1,5 @@
+auth:
+  server:
+    clientId: "clientId"
+    clientSecret: "clientSecret"
+    publicKeyUri: "http://localhost:8081/oauth/token/public_key"
