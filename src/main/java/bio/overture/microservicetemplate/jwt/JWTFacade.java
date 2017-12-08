@@ -16,6 +16,7 @@
 
 package bio.overture.microservicetemplate.jwt;
 
+import lombok.val;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Component;
@@ -28,8 +29,8 @@ public class JWTFacade implements JWTFacadeInterface {
   @Override
   public Optional<JWTUser> getUser() {
     try {
-      OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
-      JWTUser userDetails = (JWTUser) details.getDecodedDetails();
+      val details = (OAuth2AuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+      val userDetails = (JWTUser) details.getDecodedDetails();
 
       return Optional.of(userDetails);
 

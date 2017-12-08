@@ -19,6 +19,7 @@ package bio.overture.microservicetemplate.controller;
 import bio.overture.microservicetemplate.jwt.JWTUser;
 import bio.overture.microservicetemplate.jwt.JWTFacadeInterface;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,16 +38,16 @@ public class TestController {
 
   @GetMapping
   public String testGet() {
-    Optional<JWTUser> user = jwtFacade.getUser();
-    String userName = user.isPresent() ? user.get().getFirstName() : "";
+    val user = jwtFacade.getUser();
+    val userName = user.isPresent() ? user.get().getFirstName() : "";
 
     return userName.isEmpty() ? "Hello there!" : "Good Morning " + userName + "!";
   }
 
   @PostMapping
   public String testPost() {
-    Optional<JWTUser> user = jwtFacade.getUser();
-    String userName = user.isPresent() ? user.get().getFirstName() : "";
+    val user = jwtFacade.getUser();
+    val userName = user.isPresent() ? user.get().getFirstName() : "";
 
     return userName.isEmpty() ? "Greetings!" : "Good Afternoon " + userName + "!";
   }

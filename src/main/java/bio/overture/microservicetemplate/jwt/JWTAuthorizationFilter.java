@@ -18,6 +18,7 @@ package bio.overture.microservicetemplate.jwt;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
@@ -36,11 +37,11 @@ public class JWTAuthorizationFilter extends GenericFilterBean {
   @Override
   @SneakyThrows
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    val authentication = SecurityContextHolder.getContext().getAuthentication();
     if(authentication != null) {
 
-      OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) authentication.getDetails();
-      JWTUser user = (JWTUser) details.getDecodedDetails();
+      val details = (OAuth2AuthenticationDetails) authentication.getDetails();
+      val user = (JWTUser) details.getDecodedDetails();
 
       boolean hasCorrectRole = user.getRoles().contains(REQUIRED_ROLE);
       boolean hasCorrectStatus = user.getStatus().toLowerCase().equals(REQUIRED_STATUS.toLowerCase());

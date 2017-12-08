@@ -19,13 +19,13 @@ package bio.overture.microservicetemplate.config;
 import bio.overture.microservicetemplate.jwt.JWTAuthorizationFilter;
 import bio.overture.microservicetemplate.jwt.JWTTokenConverter;
 import lombok.SneakyThrows;
+import lombok.val;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -94,21 +94,21 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
   @Bean
   @Primary
   public DefaultTokenServices tokenServices() {
-    DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
+    val defaultTokenServices = new DefaultTokenServices();
     defaultTokenServices.setTokenStore(tokenStore());
     return defaultTokenServices;
   }
 
   /**
-   * Call ego server for public key to use when verifying JWTs
+   * Call EGO server for public key to use when verifying JWTs
    * Pass this value to the JWTTokenConverter
    */
   @SneakyThrows
   private String fetchJWTPublicKey() {
-    Resource publicKeyResource = resourceLoader.getResource(publicKeyUrl);
+    val publicKeyResource = resourceLoader.getResource(publicKeyUrl);
 
-    StringBuilder stringBuilder = new StringBuilder();
-    BufferedReader reader = new BufferedReader(
+    val stringBuilder = new StringBuilder();
+    val reader = new BufferedReader(
       new InputStreamReader(publicKeyResource.getInputStream()));
 
     reader.lines().forEach(stringBuilder::append);
