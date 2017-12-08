@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate;
+package bio.overture.microservicetemplate.jwt;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import lombok.Data;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class MicroserviceTemplateApplicationTests {
+import java.util.List;
 
-  @Test
-  public void contextLoads() {
-  }
+@Data
+public class JWTUser {
+
+  String name;
+  String firstName;
+  String lastName;
+  String email;
+  String status;
+  String createdAt;
+  String lastLogin;
+  String preferredLanguage;
+  List<String> roles;
 
 }

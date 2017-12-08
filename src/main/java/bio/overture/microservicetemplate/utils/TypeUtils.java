@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate;
+package bio.overture.microservicetemplate.utils;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.val;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class MicroserviceTemplateApplicationTests {
 
-  @Test
-  public void contextLoads() {
+public class TypeUtils {
+  public static  <T> T convertType(Object fromObject, Class<T> tClass){
+    val mapper = new ObjectMapper();
+    mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
+    return mapper.convertValue(fromObject, tClass);
   }
-
 }

@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate;
+package bio.overture.microservicetemplate.jwt;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import java.util.Optional;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
-public class MicroserviceTemplateApplicationTests {
-
-  @Test
-  public void contextLoads() {
-  }
-
+public interface JWTFacadeInterface {
+  Optional<JWTUser> getUser();
 }
