@@ -1,5 +1,6 @@
 # Java Microservice Quickstart Template
 Spring-Boot application preconfigured for to use [EGO](https://github.com/overture-stack/ego/) generated JWTs for authorization.
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 
@@ -7,20 +8,37 @@ Spring-Boot application preconfigured for to use [EGO](https://github.com/overtu
 This template provides the following:
 
 * Spring-Boot Application with Spring Security
-* JWT Authentication
+* JWT Authorization
 * JWT Asymmetric Verificaiton - fetches public-key from web on start-up
 * JWT Filter - User Role and Status requirements implemented by default
 * Docker and Docker-Compose configuration 
 
 
+## Template Guide
+Here is a convenient list of steps to create a new application based on this template:
+
+1. Fork this!
+2. Update __pom.xml__:
+    - `groupId`
+    - `artifactId`
+    - `name`
+    - `description`
+3. Update __application.yml__:
+    - `auth.jwt.publicKeyUrl` - URL to fetch the JWT verification key
+4. Update __README.md__: 
+    - Replace current README with template - __README.template.md__
+    - Remove template file
+    - Update Project name and description in new README
+
+
 ## Requirements
-The following software is required to run the application. It can be run locally or in a docker container.
+The application can be run locally or in a docker container, the requirements for each setup are listed below.
 
 
 ### EGO
 A running instance of [EGO](https://github.com/overture-stack/ego/) is required to generate the Authorization tokens and to provide the verification key.
 
-[EGO](https://github.com/overture-stack/ego/) can be cloned and run locally if no public server is available. 
+[EGO](https://github.com/overture-stack/ego/) can be cloned and run locally if a public instance is not setup. 
 
 
 ### Local
@@ -33,7 +51,7 @@ A running instance of [EGO](https://github.com/overture-stack/ego/) is required 
 
 
 ## Quick Start
-Make sure the JWT Verification Key is configured, then you can run the server in a docker container or on your local machine.
+Make sure the JWT Verification Key URL is configured, then you can run the server in a docker container or on your local machine.
 
 
 ### Configure JWT Verification Key
@@ -90,20 +108,3 @@ curl -X POST \
 ```
 
 If everything is working as expected, the request should return a pleasant greeting. ;)
-
-## Template Guide
-Here is a convenient list of steps to create a new application based on this template:
-
-1. Fork this!
-2. Update __pom.xml__:
-    - `groupId`
-    - `artifactId`
-    - `name`
-    - `description`
-3. Update __application.yml__:
-    - `auth.jwt.publicKeyUrl` - URL to fetch the JWT verification key
-4. Update __README.md__: 
-    - Replace current README with template - __README.template.md__
-    - Remove template file
-    - Update Project name and description in new README
- 

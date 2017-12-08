@@ -30,7 +30,8 @@ TODO: Description of features
 
 
 ## Requirements
-The following software is required to run the application. It can be run locally or in a docker container.
+The application can be run locally or in a docker container, the requirements for each setup are listed below.
+
 
 ### EGO
 A running instance of [EGO](https://github.com/overture-stack/ego/) is required to generate the Authorization tokens and to provide the verification key.
@@ -48,7 +49,7 @@ A running instance of [EGO](https://github.com/overture-stack/ego/) is required 
 
 
 ## Quick Start
-Make sure the JWT Verification Key is configured, then you can run the server in a docker container or on your local machine.
+Make sure the JWT Verification Key URL is configured, then you can run the server in a docker container or on your local machine.
 
 ### Configure JWT Verification Key
 Update __application.yml__. Set `auth.jwt.publicKeyUrl` to the URL to fetch the JWT verification key. The application will not start if it can't set the verification key for the JWTConverter.
