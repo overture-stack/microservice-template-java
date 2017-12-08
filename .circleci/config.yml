@@ -33,3 +33,9 @@ jobs:
           command: |
             mvn test \
             -D auth.jwt.publicKeyUrl=$EGO_TEST_SERVER_KEY_URL
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
