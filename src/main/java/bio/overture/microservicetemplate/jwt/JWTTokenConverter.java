@@ -18,15 +18,12 @@ package bio.overture.microservicetemplate.jwt;
 
 import bio.overture.microservicetemplate.utils.TypeUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Configurable;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import java.util.Map;
 
 @Slf4j
-@Configurable
 public class JWTTokenConverter extends JwtAccessTokenConverter {
 
   public JWTTokenConverter(String publicKey) {
