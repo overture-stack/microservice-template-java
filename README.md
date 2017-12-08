@@ -24,11 +24,22 @@ Here is a convenient list of steps to create a new application based on this tem
     - `name`
     - `description`
 3. Update __application.yml__:
-    - `auth.jwt.publicKeyUrl` - URL to fetch the JWT verification key
-4. Update __README.md__: 
+    - `auth.jwt.publicKeyUrl` - URL to fetch the JWT verification key 
+4. Configure Codacy:
+    - Go to [Codacy Project Wizard](https://www.codacy.com/wizard/projects) and add your new repository.
+5. Configure CircleCI:
+    - Go to [CircleCI Add Projects](https://circleci.com/add-projects/gh/overture-stack) and add your project.
+    - Go to CircleCI project settings and modify environment variables
+        - If not there, add new environment variable: `EGO_TEST_SERVER_KEY_URL` . This should store the URL used for `auth.jwt.publicKeyUrl` value in CircleCI tests. 
+6. Update __README.md__: 
     - Replace current README with template - __README.template.md__
     - Remove template file
     - Update Project name and description in new README
+    - Update Shields in Introduction section
+        - Codacy - Badge Markdown code can be found on Codacy project's settings page
+        - CircleCI - Build from example using github organization, project, and branch names
+    
+    
 
 
 ## Requirements
