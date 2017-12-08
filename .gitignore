@@ -1,5 +1,8 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
+.env
+env
+env.sh
 
 ### STS ###
 .apt_generated
@@ -22,3 +25,6 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
+
+### VSCode ###
+.vscode
