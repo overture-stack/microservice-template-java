@@ -1,5 +1,6 @@
+server:
+  port: 8080
+
 auth:
-  server:
-    clientId: "clientId"
-    clientSecret: "clientSecret"
-    publicKeyUri: "http://localhost:8081/oauth/token/public_key"
+  jwt:
+    publicKeyUrl: "http://localhost:8081/oauth/token/public_key"
