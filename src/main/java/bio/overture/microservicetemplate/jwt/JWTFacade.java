@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 
 @Component
-public class JWTUserFacade implements JWTUserFacadeInterface {
+public class JWTFacade implements JWTFacadeInterface {
 
   @Override
   public Optional<JWTUser> getUser() {

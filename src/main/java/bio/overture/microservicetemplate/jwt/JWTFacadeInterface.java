@@ -18,6 +18,6 @@ package bio.overture.microservicetemplate.jwt;
 
 import java.util.Optional;
 
-public interface JWTUserFacadeInterface {
+public interface JWTFacadeInterface {
   Optional<JWTUser> getUser();
 }
