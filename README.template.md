@@ -10,7 +10,10 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Requirements](#requirements)
-- [Quick Start](#quickstart)
+- [Quick Start](#quick-start)
+- [Testing](#testing)
+- [API](#requirements)
+- [Acknowledgements](#acknowledgements)
 
 
 
@@ -85,12 +88,12 @@ Application will run by default on port `1234`
 Configure the port by changing `services.api.ports` in __docker-compose.yml__. Port 1234 was used by default so the value is easy to identify and change in the configuration file.
 
 
-## Test
+## Testing
 TODO: Additional instructions for testing the application.
 
 
 ## API
 TODO: API Reference with examples, or a link to a wiki or other documentation source.
 
-## Acknowledgments
+## Acknowledgements
 TODO: Show folks some love.
