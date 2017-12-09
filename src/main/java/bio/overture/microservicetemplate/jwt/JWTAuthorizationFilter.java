@@ -19,7 +19,6 @@ package bio.overture.microservicetemplate.jwt;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.filter.GenericFilterBean;
@@ -44,7 +43,7 @@ public class JWTAuthorizationFilter extends GenericFilterBean {
       val user = (JWTUser) details.getDecodedDetails();
 
       boolean hasCorrectRole = user.getRoles().contains(REQUIRED_ROLE);
-      boolean hasCorrectStatus = user.getStatus().toLowerCase().equals(REQUIRED_STATUS.toLowerCase());
+      boolean hasCorrectStatus = user.getStatus().equalsIgnoreCase(REQUIRED_STATUS);
 
       if(!hasCorrectRole || !hasCorrectStatus) {
         SecurityContextHolder.clearContext();

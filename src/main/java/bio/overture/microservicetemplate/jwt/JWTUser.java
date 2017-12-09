@@ -23,14 +23,14 @@ import java.util.List;
 @Data
 public class JWTUser {
 
-  String name;
-  String firstName;
-  String lastName;
-  String email;
-  String status;
-  String createdAt;
-  String lastLogin;
-  String preferredLanguage;
-  List<String> roles;
+  private String name;
+  private String firstName;
+  private String lastName;
+  private String email;
+  private String status;
+  private String createdAt;
+  private String lastLogin;
+  private String preferredLanguage;
+  private List<String> roles;
 
 }

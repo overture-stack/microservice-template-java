@@ -16,7 +16,6 @@
 
 package bio.overture.microservicetemplate.controller;
 
-import bio.overture.microservicetemplate.jwt.JWTUser;
 import bio.overture.microservicetemplate.jwt.JWTFacadeInterface;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -34,7 +32,7 @@ import java.util.Optional;
 public class TestController {
 
   @Autowired
-  JWTFacadeInterface jwtFacade;
+  private JWTFacadeInterface jwtFacade;
 
   @GetMapping
   public String testGet() {
