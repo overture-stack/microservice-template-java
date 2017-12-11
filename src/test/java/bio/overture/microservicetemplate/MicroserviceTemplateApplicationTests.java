@@ -27,6 +27,8 @@ public class MicroserviceTemplateApplicationTests {
 
   @Test
   public void contextLoads() {
+    // Passes if application starts
+    assert(true);
   }
 
 }
