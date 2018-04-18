@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.utils;
+package io.kf.etl.coordinator.task;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.val;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
+public class ETLCoordinatorTaskMain {
 
-public class TypeUtils {
-  public static  <T> T convertType(Object fromObject, Class<T> tClass){
-    val mapper = new ObjectMapper();
-    mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
-    return mapper.convertValue(fromObject, tClass);
+  public static void main(String[] args) {
+    SpringApplication.run(ETLCoordinatorTaskMain.class, args);
   }
+
 }

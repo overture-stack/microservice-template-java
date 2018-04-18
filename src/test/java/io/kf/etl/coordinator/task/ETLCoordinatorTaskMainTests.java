@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.jwt;
+package io.kf.etl.coordinator.task;
 
-import java.util.Optional;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
-public interface JWTFacadeInterface {
-  Optional<JWTUser> getUser();
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class ETLCoordinatorTaskMainTests {
+
+  @Test
+  public void contextLoads() {
+    // Passes if application starts
+    assert(true);
+  }
+
 }

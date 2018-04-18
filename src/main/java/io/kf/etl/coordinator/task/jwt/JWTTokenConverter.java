@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.jwt;
+package io.kf.etl.coordinator.task.jwt;
 
-import bio.overture.microservicetemplate.utils.TypeUtils;
+import io.kf.etl.coordinator.task.utils.TypeUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;

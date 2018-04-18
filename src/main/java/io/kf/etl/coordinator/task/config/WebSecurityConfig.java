@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.config;
+package io.kf.etl.coordinator.task.config;
 
-import bio.overture.microservicetemplate.jwt.JWTAuthorizationFilter;
-import bio.overture.microservicetemplate.jwt.JWTTokenConverter;
+import io.kf.etl.coordinator.task.jwt.JWTAuthorizationFilter;
+import io.kf.etl.coordinator.task.jwt.JWTTokenConverter;
 import lombok.SneakyThrows;
 import lombok.val;
 

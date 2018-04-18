@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.controller;
+package io.kf.etl.coordinator.task.controller;
 
-import bio.overture.microservicetemplate.jwt.JWTFacadeInterface;
+import io.kf.etl.coordinator.task.fsm.states.KfEtlCoordinatorTaskStates;
+import io.kf.etl.coordinator.task.jwt.JWTFacadeInterface;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.annotation.WithStateMachine;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +36,9 @@ public class TestController {
 
   @Autowired
   private JWTFacadeInterface jwtFacade;
+
+  @Autowired
+  private StateMachine<KfEtlCoordinatorTaskStates, KfEtlCoordinatorTaskStates> fsm;
 
   @GetMapping
   public String testGet() {

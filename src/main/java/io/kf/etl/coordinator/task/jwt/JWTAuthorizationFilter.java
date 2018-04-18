@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.jwt;
+package io.kf.etl.coordinator.task.jwt;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

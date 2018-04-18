@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.jwt;
+package io.kf.etl.coordinator.task.jwt;
 
-import lombok.Data;
+import java.util.Optional;
 
-import java.util.List;
-
-@Data
-public class JWTUser {
-
-  private String name;
-  private String firstName;
-  private String lastName;
-  private String email;
-  private String status;
-  private String createdAt;
-  private String lastLogin;
-  private String preferredLanguage;
-  private List<String> roles;
-
+public interface JWTFacadeInterface {
+  Optional<JWTUser> getUser();
 }

@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate;
+package io.kf.etl.coordinator.task.jwt;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import lombok.Data;
 
-@SpringBootApplication
-public class MicroserviceTemplateApplication {
+import java.util.List;
 
-  public static void main(String[] args) {
-    SpringApplication.run(MicroserviceTemplateApplication.class, args);
-  }
+@Data
+public class JWTUser {
+
+  private String name;
+  private String firstName;
+  private String lastName;
+  private String email;
+  private String status;
+  private String createdAt;
+  private String lastLogin;
+  private String preferredLanguage;
+  private List<String> roles;
 
 }

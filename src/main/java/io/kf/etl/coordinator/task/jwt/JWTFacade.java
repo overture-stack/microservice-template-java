@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bio.overture.microservicetemplate.jwt;
+package io.kf.etl.coordinator.task.jwt;
 
 import lombok.val;
 import org.springframework.security.core.context.SecurityContextHolder;
