@@ -20,12 +20,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.kf.etl</groupId>
-    <artifactId>coordinator-task-service</artifactId>
+    <artifactId>etl-task-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>coordinator-task-service</name>
-    <description>Template project for resource microservices </description>
+    <name>etl-task-service</name>
+    <description>Microservice to run KF ETL Tasks in response to Release Coordinator</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -70,11 +70,6 @@
             <artifactId>spring-security-jwt</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.statemachine</groupId>
-            <artifactId>spring-statemachine-starter</artifactId>
-            <version>2.0.1.RELEASE</version>
-        </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -82,6 +77,12 @@
             <version>2.8.9</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.statemachine</groupId>
+            <artifactId>spring-statemachine-starter</artifactId>
+            <version>2.0.1.RELEASE</version>
+        </dependency>
+        
         <dependency>
             <groupId>com.spotify</groupId>
             <artifactId>docker-client</artifactId>

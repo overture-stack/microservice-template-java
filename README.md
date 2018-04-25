@@ -1,46 +1,51 @@
-# Java Microservice Quickstart Template
-Spring-Boot application preconfigured for to use [EGO](https://github.com/overture-stack/ego/) generated JWTs for authorization.
+<h1 align="center"> Kids First ETL Task Runner </h1> <br>
+
+<p align="center">
+  Microservice to execute Dockerized Tasks as requested by the Kids First Release Coordinator
+</p>
+
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Process](#process)
+- [Requirements](#requirements)
+- [Quick Start](#quick-start)
+- [Testing](#testing)
+- [API](#requirements)
+- [Acknowledgements](#acknowledgements)
+
+
+
+
+## Introduction
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/e91606af4a364076a7058c5ea1c006a8)](https://www.codacy.com/app/joneubank/kf-portal-etl-coordinator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=overture-stack/microservice-template-java&amp;utm_campaign=Badge_Grade)
 
+This application will initiate tasks as requested by the Kids First Release Coordinator. Tasks are defined processes run in docker containers, created when the task is started. This allows multiple tasks to be run simultaneously in distinct containers.
 
-## Features
-This template provides the following:
+Specifically, this will be used to execute the Kids First ETL tasks. However, this is built with a configuration model that makes it easy to adopt any other dockerized task that the release controller wants to manage.
 
-* Spring-Boot Application with Spring Security
-* JWT Authorization
-* JWT Asymmetric Verificaiton - fetches public-key from web on start-up
-* JWT Filter - User Role and Status requirements implemented by default
-* Docker and Docker-Compose configuration 
+Authorization for requests made to the Task Runner is performed via JWTs from an [EGO](https://github.com/overture-stack/ego) server. A valid token with permissions for a recognized Task Coordinator application is required for any action to be taken on any request to this ETL Task Runner.
 
+## Process
+Each task is moved through the following state-transitions:
 
-## Template Guide
-Here is a convenient list of steps to create a new application based on this template:
+![State Transition Diagram for Tasks](state-diagram.png "State Transition Diagram for Tasks")
 
-1. Fork this!
-2. Update __pom.xml__:
-    - `groupId`
-    - `artifactId`
-    - `name`
-    - `description`
-3. Update __application.yml__:
-    - `auth.jwt.publicKeyUrl` - URL to fetch the JWT verification key 
-4. Configure Codacy:
-    - Go to [Codacy Project Wizard](https://www.codacy.com/wizard/projects) and add your new repository.
-5. Configure CircleCI:
-    - Go to [CircleCI Add Projects](https://circleci.com/add-projects/gh/overture-stack) and add your project.
-    - Go to CircleCI project settings and modify environment variables
-        - If not there, add new environment variable: `EGO_TEST_SERVER_KEY_URL` . This should store the URL used for `auth.jwt.publicKeyUrl` value in CircleCI tests. 
-6. Update __README.md__: 
-    - Replace current README with template - __README.template.md__
-    - Remove template file
-    - Update Project name and description in new README
-    - Update Shields in Introduction section
-        - Codacy - Badge Markdown code can be found on Codacy project's settings page
-        - CircleCI - Build from example using github organization, project, and branch names
-    
-    
+The task runner provides 2 services that can be called by the Release Coordinator: /status and /tasks
 
+* Status - General health and version status of the ETL service. 
+ Initialize, Status, Run, Publish. These steps match the requests outlined in the [Kids First Task Coordinator](https://github.com/kids-first/kf-api-release-coordinator#sequence-of-operations-success-case) documentation.
+
+1. Initialize - This will check if the task runner is able to run a new task. Any checks that are needed ahead of starting a task are performed here. For any ETL tasks, this will include checking permissions to access the studies that will be requested in the ETL feed. On success this will return a unique task code to be used for this task.
+
+2. Status - Given a recognized task ID, the task runner will return the current state of the given task. See the State Transition Diagram for the possible statuses.
+
+3. Run - Start the task running and stage the results. Given ID for a task currently in PENDING status from the Intialize step, and any required variables for the task, a docker container will be created and the task run.
+
+4. Publish - Given a task ID that is currently in STAGED status after completing the Run step, this will publish the results.
 
 ## Requirements
 The application can be run locally or in a docker container, the requirements for each setup are listed below.
@@ -49,7 +54,7 @@ The application can be run locally or in a docker container, the requirements fo
 ### EGO
 A running instance of [EGO](https://github.com/overture-stack/ego/) is required to generate the Authorization tokens and to provide the verification key.
 
-[EGO](https://github.com/overture-stack/ego/) can be cloned and run locally if a public instance is not setup. 
+[EGO](https://github.com/overture-stack/ego/) can be cloned and run locally if no public server is available. 
 
 
 ### Local
@@ -63,7 +68,6 @@ A running instance of [EGO](https://github.com/overture-stack/ego/) is required 
 
 ## Quick Start
 Make sure the JWT Verification Key URL is configured, then you can run the server in a docker container or on your local machine.
-
 
 ### Configure JWT Verification Key
 Update __application.yml__. Set `auth.jwt.publicKeyUrl` to the URL to fetch the JWT verification key. The application will not start if it can't set the verification key for the JWTConverter.
@@ -96,26 +100,19 @@ Application will run by default on port `1234`
 
 Configure the port by changing `services.api.ports` in __docker-compose.yml__. Port 1234 was used by default so the value is easy to identify and change in the configuration file.
 
-### Test Endpoint
-The application has a single endpoint `/test` that will accept GET and POST requests with a valid token.
 
-A JWT must be passed in a request header, following the Bearer token pattern. Below is a usable value to test with, it is valid vs. the example keystore given in the EGO repo.
- 
- ```
- Authorization=Bearer eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1MTI3NjIxODIsImV4cCI6MjE0NzQ4MzY0Nywic3ViIjoiNjA2IiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwiY29udGV4dCI6eyJ1c2VyIjp7Im5hbWUiOiJEZW1vLlVzZXJAZXhhbXBsZS5jb20iLCJlbWFpbCI6IkRlbW8uVXNlckBleGFtcGxlLmNvbSIsInN0YXR1cyI6IkFwcHJvdmVkIiwiZmlyc3ROYW1lIjoiRGVtbyIsImxhc3ROYW1lIjoiVXNlciIsImNyZWF0ZWRBdCI6IjIwMTctMTEtMjIgMDM6MTA6NTUiLCJsYXN0TG9naW4iOiIyMDE3LTEyLTA4IDA3OjQzOjAyIiwicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInJvbGVzIjpbIlVTRVIiXX19LCJqdGkiOiI0OGE5NGIzNy1mMTJlLTQxNWQtYjM1Zi1kZDhmOThiMDQ4ZDcifQ.Cmgbd_xnUp8dPnIJvmUXmh5LYnHgHSk_n_0VzCn0k9r4WVNdsupb-MQqJvgOMg3K8si5mzhIjzLi9rZL5N_JwFXtpjKXKRVT7KF4mYfqF7bVNm6tkQg6CeAGhiuaMujhLhASS79LVBPKOv1tk79WuVu-VKHzyLS1h3yFQAsjLVQxA6_0MD7zKa1W3Nbhte6lHwgiNo1AlxuIJzP37-2saNb-aUy9DigmH3_C2oPqxpBu-YNnaekO5jNmbfucMinlpxCpEw-UvpvxI9Xk_9E73TNQE9acNQyyg_BxdnVbwDsR-kG5QXNrlEAxGm-1yY6w8Nvqxcp-3uoff6K0uKLUdQ
- ```
- 
- Test cURL requests:
- ```bash
-curl -X GET \
-  http://localhost:1234/test \
-  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1MTI3NjIxODIsImV4cCI6MjE0NzQ4MzY0Nywic3ViIjoiNjA2IiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwiY29udGV4dCI6eyJ1c2VyIjp7Im5hbWUiOiJEZW1vLlVzZXJAZXhhbXBsZS5jb20iLCJlbWFpbCI6IkRlbW8uVXNlckBleGFtcGxlLmNvbSIsInN0YXR1cyI6IkFwcHJvdmVkIiwiZmlyc3ROYW1lIjoiRGVtbyIsImxhc3ROYW1lIjoiVXNlciIsImNyZWF0ZWRBdCI6IjIwMTctMTEtMjIgMDM6MTA6NTUiLCJsYXN0TG9naW4iOiIyMDE3LTEyLTA4IDA3OjQzOjAyIiwicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInJvbGVzIjpbIlVTRVIiXX19LCJqdGkiOiI0OGE5NGIzNy1mMTJlLTQxNWQtYjM1Zi1kZDhmOThiMDQ4ZDcifQ.Cmgbd_xnUp8dPnIJvmUXmh5LYnHgHSk_n_0VzCn0k9r4WVNdsupb-MQqJvgOMg3K8si5mzhIjzLi9rZL5N_JwFXtpjKXKRVT7KF4mYfqF7bVNm6tkQg6CeAGhiuaMujhLhASS79LVBPKOv1tk79WuVu-VKHzyLS1h3yFQAsjLVQxA6_0MD7zKa1W3Nbhte6lHwgiNo1AlxuIJzP37-2saNb-aUy9DigmH3_C2oPqxpBu-YNnaekO5jNmbfucMinlpxCpEw-UvpvxI9Xk_9E73TNQE9acNQyyg_BxdnVbwDsR-kG5QXNrlEAxGm-1yY6w8Nvqxcp-3uoff6K0uKLUdQ'
-```
+## Testing
+TODO: Additional instructions for testing the application.
 
-```bash
-curl -X POST \
-  http://localhost:1234/test \
-  -H 'authorization: Bearer eyJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE1MTI3NjIxODIsImV4cCI6MjE0NzQ4MzY0Nywic3ViIjoiNjA2IiwiaXNzIjoiZWdvIiwiYXVkIjpbXSwiY29udGV4dCI6eyJ1c2VyIjp7Im5hbWUiOiJEZW1vLlVzZXJAZXhhbXBsZS5jb20iLCJlbWFpbCI6IkRlbW8uVXNlckBleGFtcGxlLmNvbSIsInN0YXR1cyI6IkFwcHJvdmVkIiwiZmlyc3ROYW1lIjoiRGVtbyIsImxhc3ROYW1lIjoiVXNlciIsImNyZWF0ZWRBdCI6IjIwMTctMTEtMjIgMDM6MTA6NTUiLCJsYXN0TG9naW4iOiIyMDE3LTEyLTA4IDA3OjQzOjAyIiwicHJlZmVycmVkTGFuZ3VhZ2UiOm51bGwsInJvbGVzIjpbIlVTRVIiXX19LCJqdGkiOiI0OGE5NGIzNy1mMTJlLTQxNWQtYjM1Zi1kZDhmOThiMDQ4ZDcifQ.Cmgbd_xnUp8dPnIJvmUXmh5LYnHgHSk_n_0VzCn0k9r4WVNdsupb-MQqJvgOMg3K8si5mzhIjzLi9rZL5N_JwFXtpjKXKRVT7KF4mYfqF7bVNm6tkQg6CeAGhiuaMujhLhASS79LVBPKOv1tk79WuVu-VKHzyLS1h3yFQAsjLVQxA6_0MD7zKa1W3Nbhte6lHwgiNo1AlxuIJzP37-2saNb-aUy9DigmH3_C2oPqxpBu-YNnaekO5jNmbfucMinlpxCpEw-UvpvxI9Xk_9E73TNQE9acNQyyg_BxdnVbwDsR-kG5QXNrlEAxGm-1yY6w8Nvqxcp-3uoff6K0uKLUdQ'
-```
 
-If everything is working as expected, the request should return a pleasant greeting. ;)
+## API
+
+
+### Initiate Service
+
+
+## Acknowledgements
+
+Services provided to accomplish the task coordination process as defined in the [Kids First Task Coordinator](https://github.com/kids-first/kf-api-release-coordinator)
+
+JWT Authentication model provided by [Overture](https://github.com/overture-stack)'s [Ego](https://github.com/overture-stack/ego) service. This microservice is built on a fork of the [Ego Microservice Template for Java](https://github.com/overture-stack/microservice-template-java)
