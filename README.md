@@ -1,7 +1,7 @@
 <h1 align="center"> Kids First ETL Task Runner </h1> <br>
 
 <p align="center">
-  Microservice to execute Dockerized Tasks as requested by the Kids First Release Coordinator
+  Microservice to execute ETL as a FSM process when requested by the Kids First Release Coordinator
 </p>
 
 
@@ -16,36 +16,32 @@
 - [Acknowledgements](#acknowledgements)
 
 
-
-
 ## Introduction
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/e91606af4a364076a7058c5ea1c006a8)](https://www.codacy.com/app/joneubank/kf-portal-etl-coordinator?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=overture-stack/microservice-template-java&amp;utm_campaign=Badge_Grade)
 
-This application will initiate tasks as requested by the Kids First Release Coordinator. Tasks are defined processes run in docker containers, created when the task is started. This allows multiple tasks to be run simultaneously in distinct containers.
+This application will initiate ETL tasks as requested by the Kids First Release Coordinator. Tasks are modeled as Finite State Machines (FSMs) and specific state transitions (initialize, run, publish) can be started by HTTPS messages from the Release Coordinator. 
 
-Specifically, this will be used to execute the Kids First ETL tasks. However, this is built with a configuration model that makes it easy to adopt any other dockerized task that the release controller wants to manage.
+ETL processes are run in docker containers which are created when the task is Run, and terminate when the ETL is staged. This allows multiple tasks to be run simultaneously in distinct containers. The ETL publish step is performed by the Java Application.
 
-Authorization for requests made to the Task Runner is performed via JWTs from an [EGO](https://github.com/overture-stack/ego) server. A valid token with permissions for a recognized Task Coordinator application is required for any action to be taken on any request to this ETL Task Runner.
+Although this application is built to accomplish the specific work of the KF ETL, the  this is built with a configuration model that makes it easy to adopt any other dockerized task that the release controller wants to manage.
 
-## Process
-Each task is moved through the following state-transitions:
+Authorization for requests made to the Task Runner is performed via JWTs from an [EGO](https://github.com/overture-stack/ego) server. A valid token with Admin permissions for a recognized Task Coordinator application is required for any action to be taken on any request to this ETL Task Runner.
+
+## Task Model
+Each Task is and FSM with the following state-transitions (yellow and green boxes), which can be initiated by the given requests (white diamonds).
 
 ![State Transition Diagram for Tasks](state-diagram.png "State Transition Diagram for Tasks")
 
-The task runner provides 2 services that can be called by the Release Coordinator: /status and /tasks
-
-* Status - General health and version status of the ETL service. 
- Initialize, Status, Run, Publish. These steps match the requests outlined in the [Kids First Task Coordinator](https://github.com/kids-first/kf-api-release-coordinator#sequence-of-operations-success-case) documentation.
+The possible Task Commands from the Release coordinator are:
+Initialize, Status, Run, Publish. These steps match the requests outlined in the [Kids First Task Coordinator](https://github.com/kids-first/kf-api-release-coordinator#sequence-of-operations-success-case) documentation.
 
 1. Initialize - This will check if the task runner is able to run a new task. Any checks that are needed ahead of starting a task are performed here. For any ETL tasks, this will include checking permissions to access the studies that will be requested in the ETL feed. On success this will return a unique task code to be used for this task.
 
-2. Status - Given a recognized task ID, the task runner will return the current state of the given task. See the State Transition Diagram for the possible statuses.
+2. Run - Start the task running and stage the results. Given ID for a task currently in PENDING status from the Intialize step, and any required variables for the task, a docker container will be created and the task run.
 
-3. Run - Start the task running and stage the results. Given ID for a task currently in PENDING status from the Intialize step, and any required variables for the task, a docker container will be created and the task run.
-
-4. Publish - Given a task ID that is currently in STAGED status after completing the Run step, this will publish the results.
+3. Publish - Given a task ID that is currently in STAGED status after completing the Run step, this will publish the results.
 
 ## Requirements
 The application can be run locally or in a docker container, the requirements for each setup are listed below.
@@ -106,10 +102,15 @@ TODO: Additional instructions for testing the application.
 
 
 ## API
+The task runner provides 2 services that can be called by the Release Coordinator: 
 
+* /status - General health and version status of the Task Runner
+* /tasks - Commands to create and interact with tasks:
+  * Initiate new task
+  * Begin Staging or Publishing existing Task
+  * Query Status of Task by task ID
 
-### Initiate Service
-
+Api Specifications can be found [here](https://kids-first.github.io/kf-api-release-coordinator/docs/coordinator.html#section/Coordinator-and-Task-Services).
 
 ## Acknowledgements
 
