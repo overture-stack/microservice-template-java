@@ -1,5 +1,6 @@
 package io.kf.coordinator.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.kf.coordinator.task.TaskAction;
 import lombok.Data;
 import lombok.NonNull;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 @RequiredArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TasksRequest {
 
   @NonNull
