@@ -11,41 +11,42 @@ import org.springframework.statemachine.StateMachine;
 @Slf4j
 public abstract class Task {
 
-  private StateMachine<TaskFSMStates, TaskFSMEvents> stateMachine;
+  protected StateMachine<TaskFSMStates, TaskFSMEvents> stateMachine;
   @NonNull
   @Getter
-  private String id;
+  protected String id;
   @Getter
-  private String release;
+  protected String release;
 
   public Task(String id, String release) throws Exception {
     this.id = id;
     this.release = release;
 
-    stateMachine = TaskFSMGenerator.generate(
-      ()->this.initialize(),
-      ()->this.run(),
-      ()->this.publish()
-    );
+    stateMachine = TaskFSMGenerator.generate();
 
   }
 
   public void handleAction(TaskAction action) {
     switch(action) {
+      case initialize:
+        this.initialize();
+        break;
       case cancel:
-        this.stateMachine.sendEvent(TaskFSMEvents.CANCEL);
+        this.cancel();
         break;
       case start:
-        this.stateMachine.sendEvent(TaskFSMEvents.START);
+        this.run();
         break;
       case publish:
-        this.stateMachine.sendEvent(TaskFSMEvents.PUBLISH);
+        this.publish();
+        break;
     }
   }
 
-  public abstract Void initialize();
-  public abstract Void run();
-  public abstract Void publish();
+  public abstract void initialize();
+  public abstract void run();
+  public abstract void publish();
+  public abstract void cancel();
 
   public TaskFSMStates getState() {
     return this.stateMachine.getState().getId();

@@ -28,7 +28,11 @@ public abstract class TaskManager {
       case initialize:
         log.debug("Initialize action for " + request.getTask_id());
         Task newTask = createTask(taskId, releaseId);
-        tasks.put(taskId, newTask);
+        if (newTask != null) {
+          tasks.put(taskId, newTask);
+
+          newTask.handleAction(action);
+        }
         break;
 
       default:
