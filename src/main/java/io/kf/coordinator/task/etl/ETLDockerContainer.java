@@ -23,6 +23,9 @@ public class ETLDockerContainer {
   private boolean hasStarted = false;
   private boolean hasFinished = false;
 
+  private String dockerMainCommand = "for i in `seq 1 60`; do sleep 1; echo $i; done";
+  private String dockerTriggeredCommand = "echo \"DOCKER RECEIVED RUN COMMAND\"";
+
   public ETLDockerContainer() throws DockerCertificateException, DockerException, InterruptedException {
     docker = DefaultDockerClient.fromEnv().build();
 
@@ -49,36 +52,56 @@ public class ETLDockerContainer {
     final ContainerConfig containerConfig = ContainerConfig.builder()
       .hostConfig(hostConfig)
       .image(dockerImage).exposedPorts(ports)
-      .cmd("sh", "-c", "while :; do sleep 1; done")
+      .cmd("sh", "-c", dockerMainCommand)
       .build();
 
     final ContainerCreation creation = docker.createContainer(containerConfig);
     this.id = creation.id();
 
-    // Inspect container
-    final ContainerInfo info = docker.inspectContainer(this.id);
 
-    // Start container
-    docker.startContainer(id);
+
+
 
   }
 
   public void runETL() throws DockerException, InterruptedException {
+    docker.startContainer(id);
+    // Start container
+
     // Exec command inside running container with attached STDOUT and STDERR
-    final String[] command = {"sh", "-c", "ls"};
-    final ExecCreation execCreation = docker.execCreate(
-      this.id, command, DockerClient.ExecCreateParam.attachStdout(),
-      DockerClient.ExecCreateParam.attachStderr());
-    final LogStream output = docker.execStart(execCreation.id());
-    final String execOutput = output.readFully();
+//    final String[] command = {"sh", "-c", dockerTriggeredCommand};
+//    final ExecCreation execCreation = docker.execCreate(
+//      this.id, command, DockerClient.ExecCreateParam.attachStdout(),
+//      DockerClient.ExecCreateParam.attachStderr());
+//    final LogStream output = docker.execStart(execCreation.id());
+//    final String execOutput = output.readFully();
 
     this.hasStarted = true;
-
   }
 
   public boolean isComplete() {
 
-    return this.hasStarted && this.hasFinished;
+    if(this.hasStarted && !this.hasFinished) {
+      this.hasFinished = this.checkFinished();
+    }
+
+    return this.hasFinished;
+  }
+
+  private boolean checkFinished() {
+    // Inspect container
+    try {
+
+      final ContainerInfo info = docker.inspectContainer(this.id);
+      return !info.state().running();
+
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } catch (DockerException e) {
+      e.printStackTrace();
+    }
+    return false;
+
   }
 
 

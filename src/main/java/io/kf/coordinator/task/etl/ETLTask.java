@@ -48,9 +48,6 @@ public class ETLTask extends Task{
     if(startedRunning) {
       try {
         etl.runETL();
-        this.stateMachine.sendEvent(TaskFSMEvents.RUNNING_DONE);
-        log.info(String.format("ETL Task [%s] -> STAGED.", this.id));
-
       } catch (InterruptedException e) {
         e.printStackTrace();
         this.stateMachine.sendEvent(TaskFSMEvents.FAIL);
@@ -72,18 +69,16 @@ public class ETLTask extends Task{
   @Override
   public TaskFSMStates getState() {
 
-    if(super.getState().equals(TaskFSMStates.RUNNING)){
+    if(this.stateMachine.getState().getId().equals(TaskFSMStates.RUNNING)){
       // Check if docker has stopped
-      boolean isComplete = this.etl.isComplete();
+      boolean isComplete = etl.isComplete();
 
-
-
-      if (hasStopped) {
+      if (isComplete) {
         this.stateMachine.sendEvent(TaskFSMEvents.RUNNING_DONE);
       }
     }
 
-    return super.getState();
+    return this.stateMachine.getState().getId();
   }
 
   @Override

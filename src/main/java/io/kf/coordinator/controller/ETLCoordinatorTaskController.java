@@ -45,12 +45,13 @@ public class ETLCoordinatorTaskController {
 
     Task task = taskManager.getTask(request.getTask_id());
 
+    // TODO: Handle task == null case
+
     val response = TasksDTO.builder()
       .task_id(request.getTask_id())
       .release_id(request.getRelease_id())
       .state(task.getState())
       .progress(task.getProgress());
     return response.build();
-
   }
 }
