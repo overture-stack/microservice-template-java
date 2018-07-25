@@ -2,11 +2,18 @@ package io.kf.coordinator.task.etl;
 
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.*;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerInfo;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.PortBinding;
+import lombok.NonNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,8 +24,12 @@ public class ETLDockerContainer {
   public DockerClient docker;
   private String id;
 
-  final private static String dockerImage = "busybox:latest";
+//  final private static String dockerImage = "busybox:latest";
   final private static String[] ports = {};
+
+  private final String dockerImage;
+  private final Path etlConfFile;
+  private final Path etlJarFile;
 
   private boolean hasStarted = false;
   private boolean hasFinished = false;
@@ -26,7 +37,15 @@ public class ETLDockerContainer {
   private String dockerMainCommand = "for i in `seq 1 60`; do sleep 1; echo $i; done";
   private String dockerTriggeredCommand = "echo \"DOCKER RECEIVED RUN COMMAND\"";
 
-  public ETLDockerContainer() throws DockerCertificateException, DockerException, InterruptedException {
+  @Autowired
+  public ETLDockerContainer(
+      @Value("${docker.imageId}") @NonNull String dockerImage,
+      @Value("${docker.useLocal}") boolean useLocal,
+      @Value("${docker.input.conf}") @NonNull String etlConfFilePath,
+      @Value("${docker.input.jar}") @NonNull String etlJarFilePath
+  ) throws DockerCertificateException, DockerException, InterruptedException {
+    this.dockerImage = dockerImage;
+    this.
     docker = DefaultDockerClient.fromEnv().build();
 
     docker.pull(dockerImage);
