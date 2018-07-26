@@ -2,9 +2,11 @@ package io.kf.coordinator.task;
 
 import io.kf.coordinator.dto.TasksRequest;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 public abstract class TaskManager {
@@ -16,9 +18,10 @@ public abstract class TaskManager {
   }
 
   public void dispatch(TasksRequest request) {
-    String taskId = request.getTask_id();
-    String releaseId = request.getRelease_id();
-    TaskAction action = request.getAction();
+    val taskId = request.getTask_id();
+    val releaseId = request.getRelease_id();
+    val action = request.getAction();
+    val studyIds = request.getStudyIds();
     switch(action) {
 
       case status:
@@ -27,7 +30,7 @@ public abstract class TaskManager {
 
       case initialize:
         log.debug("Initialize action for " + request.getTask_id());
-        Task newTask = createTask(taskId, releaseId);
+        val newTask = createTask(taskId, releaseId, studyIds);
         if (newTask != null) {
           tasks.put(taskId, newTask);
 
@@ -47,6 +50,6 @@ public abstract class TaskManager {
     return tasks.get(taskId);
   }
 
-  protected abstract Task createTask(String taskId, String releaseId);
+  protected abstract Task createTask(String taskId, String releaseId, Set<String> studyIds);
 
 }

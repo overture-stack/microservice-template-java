@@ -6,6 +6,8 @@ import io.kf.coordinator.task.fsm.states.TaskFSMStates;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import java.util.Set;
+
 import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.CANCEL;
 import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.FAIL;
 import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.INITIALIZE;
@@ -20,12 +22,15 @@ import static java.lang.String.format;
 public class ETLTask extends Task{
 
   private final ETLDockerContainer etl;
-  private final String studyId;
+  private final Set<String> studyIds;
 
-  public ETLTask(ETLDockerContainer etl, String id, String releaseId, String studyId) throws Exception {
+  public ETLTask(@NonNull ETLDockerContainer etl,
+          @NonNull String id,
+          @NonNull String releaseId,
+          @NonNull Set<String> studyIds) throws Exception {
     super(id, releaseId);
     this.etl = etl;
-    this.studyId = studyId;
+    this.studyIds = studyIds;
   }
 
   @Override
@@ -34,7 +39,7 @@ public class ETLTask extends Task{
 
     try {
 
-      etl.startContainer(studyId, release);
+      etl.startContainer(studyIds, release);
 
       stateMachine.sendEvent(INITIALIZE);
       log.info(format("ETL Task [%s] -> PENDING.", this.id));
