@@ -9,9 +9,7 @@ docker:
   useLocal: true
   # This can be a tag (if useLocal == false) or an imageId (if useLocal == true)
   imageId: <i.e: docker images | head -2 | tail -1>
-  externalNetwork:
-    enable: false
-    id: <i.e:  docker network ls | awk '{print $1}' | head -2 | tail -1>
+  networkId: default
   input:
     conf: <path to kf_etl.conf file>
     jar: <path to kf-portal-etl.jar file>

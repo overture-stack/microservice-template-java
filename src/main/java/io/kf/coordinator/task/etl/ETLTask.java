@@ -2,92 +2,103 @@ package io.kf.coordinator.task.etl;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import io.kf.coordinator.task.Task;
-import io.kf.coordinator.task.fsm.events.TaskFSMEvents;
 import io.kf.coordinator.task.fsm.states.TaskFSMStates;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+
+import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.CANCEL;
+import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.FAIL;
+import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.INITIALIZE;
+import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.PUBLISH;
+import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.PUBLISHING_DONE;
+import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.RUN;
+import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.RUNNING_DONE;
+import static io.kf.coordinator.task.fsm.states.TaskFSMStates.RUNNING;
+import static java.lang.String.format;
 
 @Slf4j
 public class ETLTask extends Task{
 
-  private ETLDockerContainer etl;
+  private final ETLDockerContainer etl;
+  private final String studyId;
 
-  public ETLTask(String id, String release) throws Exception {
-    super(id, release);
-
-    etl = new ETLDockerContainer();
+  public ETLTask(ETLDockerContainer etl, String id, String releaseId, String studyId) throws Exception {
+    super(id, releaseId);
+    this.etl = etl;
+    this.studyId = studyId;
   }
 
   @Override
   public void initialize() {
-    log.info(String.format("ETL Task [%s] Initializing ...", this.id));
+    log.info(format("ETL Task [%s] Initializing ...", this.id));
 
     try {
 
-      etl.startContainer();
+      etl.startContainer(studyId, release);
 
-      this.stateMachine.sendEvent(TaskFSMEvents.INITIALIZE);
-      log.info(String.format("ETL Task [%s] -> PENDING.", this.id));
+      stateMachine.sendEvent(INITIALIZE);
+      log.info(format("ETL Task [%s] -> PENDING.", this.id));
 
-    } catch (InterruptedException e) {
+    } catch (InterruptedException | DockerException e) {
+
       e.printStackTrace();
-      this.stateMachine.sendEvent(TaskFSMEvents.FAIL);
-      log.info(String.format("ETL Task [%s] -> FAILED while initializing.", this.id));
-
-    } catch (DockerException e) {
-      e.printStackTrace();
-      this.stateMachine.sendEvent(TaskFSMEvents.FAIL);
-      log.info(String.format("ETL Task [%s] -> FAILED while initializing.", this.id));
+      stateMachine.sendEvent(FAIL);
+      log.info(format("ETL Task [%s] -> FAILED while initializing.", this.id));
     }
   }
 
   @Override
   public void run() {
-    log.info(String.format("ETL Task [%s] Running ...", this.id));
-    boolean startedRunning = this.stateMachine.sendEvent(TaskFSMEvents.RUN);
+    log.info(format("ETL Task [%s] Running ...", id));
+    boolean startedRunning = stateMachine.sendEvent(RUN);
 
     if(startedRunning) {
       try {
         etl.runETL();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        this.stateMachine.sendEvent(TaskFSMEvents.FAIL);
-        log.info(String.format("ETL Task [%s] -> FAILED while running.", this.id));
 
-      } catch (DockerException e) {
+      } catch (InterruptedException | DockerException e) {
         e.printStackTrace();
-        this.stateMachine.sendEvent(TaskFSMEvents.FAIL);
-        log.info(String.format("ETL Task [%s] -> FAILED while running.", this.id));
+        stateMachine.sendEvent(FAIL);
+        log.info("ETL Task [{}] -> FAILED while running.", id);
       }
-      this.stateMachine.sendEvent(TaskFSMEvents.RUN);
+      stateMachine.sendEvent(RUN);
 
-      log.info(String.format("ETL Task [%s] started.", this.id));
+      log.info("ETL Task [{}] started.", id);
 
     }
 
   }
+
 
   @Override
   public TaskFSMStates getState() {
 
-    if(this.stateMachine.getState().getId().equals(TaskFSMStates.RUNNING)){
+    if(stateMachine.getState().getId().equals(RUNNING)){
       // Check if docker has stopped
-      boolean isComplete = etl.isComplete();
-
-      if (isComplete) {
-        this.stateMachine.sendEvent(TaskFSMEvents.RUNNING_DONE);
+      try {
+        val isComplete = etl.isComplete();
+        if (isComplete) {
+          if (etl.finishedWithErrors()) {
+            stateMachine.sendEvent(FAIL);
+          } else {
+            stateMachine.sendEvent(RUNNING_DONE);
+          }
+        }
+      } catch (InterruptedException | DockerException e) {
+        stateMachine.sendEvent(FAIL);
       }
     }
 
-    return this.stateMachine.getState().getId();
+    return stateMachine.getState().getId();
   }
 
   @Override
   public void publish() {
-    if(this.stateMachine.sendEvent(TaskFSMEvents.PUBLISH)) {
-      log.info(String.format("ETL Task [%s] Publishing ...", this.id));
+    if(stateMachine.sendEvent(PUBLISH)) {
+      log.info("ETL Task [{}] Publishing ...", id);
 
-      if (this.stateMachine.sendEvent(TaskFSMEvents.PUBLISHING_DONE)) {
-        log.info(String.format("ETL Task [%s] -> PUBLISHED.", this.id));
+      if (stateMachine.sendEvent(PUBLISHING_DONE)) {
+        log.info("ETL Task [{}] -> PUBLISHED.", id);
       }
     }
   }
@@ -95,8 +106,9 @@ public class ETLTask extends Task{
   @Override
   public void cancel() {
     // If running, stop docker,
-    if(this.stateMachine.sendEvent(TaskFSMEvents.CANCEL)) {
-      log.info(String.format("ETL Task [%s] has been cancelled.", this.id));
+    if(stateMachine.sendEvent(CANCEL)) {
+      log.info(format("ETL Task [%s] has been cancelled.", this.id));
+      //rtisma   etl.cancel();
     }
   }
 }
