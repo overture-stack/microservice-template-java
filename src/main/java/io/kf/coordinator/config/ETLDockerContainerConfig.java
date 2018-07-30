@@ -1,11 +1,14 @@
 package io.kf.coordinator.config;
 
-import com.spotify.docker.client.exceptions.DockerCertificateException;
-import com.spotify.docker.client.exceptions.DockerException;
-import io.kf.coordinator.task.etl.ETLDockerContainer;
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient;
+import lombok.Getter;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+@Getter
 @Configuration
 public class ETLDockerContainerConfig {
 
@@ -24,9 +27,10 @@ public class ETLDockerContainerConfig {
   @Value("${docker.network.id}")
   private String networkId;
 
-  public ETLDockerContainer createETLDockerContainer()
-      throws InterruptedException, DockerException, DockerCertificateException {
-    return new ETLDockerContainer(dockerImage, useLocal, etlConfFilePath, etlJarFilePath, networkId);
+  @Bean
+  @SneakyThrows
+  public DockerClient docker(){
+    return DefaultDockerClient.fromEnv().build();
   }
 
 }

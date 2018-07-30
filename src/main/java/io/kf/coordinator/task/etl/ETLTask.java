@@ -3,6 +3,7 @@ package io.kf.coordinator.task.etl;
 import com.spotify.docker.client.exceptions.DockerException;
 import io.kf.coordinator.task.Task;
 import io.kf.coordinator.task.fsm.states.TaskFSMStates;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -17,6 +18,7 @@ import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.RUN;
 import static io.kf.coordinator.task.fsm.events.TaskFSMEvents.RUNNING_DONE;
 import static io.kf.coordinator.task.fsm.states.TaskFSMStates.RUNNING;
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 @Slf4j
 public class ETLTask extends Task{
@@ -36,20 +38,24 @@ public class ETLTask extends Task{
   @Override
   public void initialize() {
     log.info(format("ETL Task [%s] Initializing ...", this.id));
+    if (studyIds.isEmpty() && isNotBlank(release) ){
+      try {
+        etl.createContainer(studyIds, release);
+        stateMachine.sendEvent(INITIALIZE);
+        log.info(format("ETL Task [%s] -> PENDING.", this.id));
 
-    try {
+      } catch (InterruptedException | DockerException e) {
 
-      etl.startContainer(studyIds, release);
+        e.printStackTrace();
+        stateMachine.sendEvent(FAIL);
+        log.info(format("ETL Task [%s] -> FAILED while initializing.", this.id));
+      }
 
-      stateMachine.sendEvent(INITIALIZE);
-      log.info(format("ETL Task [%s] -> PENDING.", this.id));
-
-    } catch (InterruptedException | DockerException e) {
-
-      e.printStackTrace();
+    } else {
       stateMachine.sendEvent(FAIL);
-      log.info(format("ETL Task [%s] -> FAILED while initializing.", this.id));
+      log.info(format("ETL Task [%s] -> FAILED while initializing because studies empty or release is blank.", this.id));
     }
+
   }
 
   @Override

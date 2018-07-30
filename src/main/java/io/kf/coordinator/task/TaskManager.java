@@ -1,27 +1,25 @@
 package io.kf.coordinator.task;
 
 import io.kf.coordinator.dto.TasksRequest;
+import io.kf.coordinator.exceptions.TaskException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @Slf4j
+@RequiredArgsConstructor
 public abstract class TaskManager {
 
-  private Map<String, Task> tasks;
-
-  public TaskManager() {
-    tasks = new HashMap<>();
-  }
+  private Map<String, Task> tasks = new HashMap<>();
 
   public void dispatch(TasksRequest request) {
     val taskId = request.getTask_id();
     val releaseId = request.getRelease_id();
     val action = request.getAction();
-    val studyIds = request.getStudyIds();
+
     switch(action) {
 
       case status:
@@ -29,19 +27,23 @@ public abstract class TaskManager {
         break;
 
       case initialize:
-        log.debug("Initialize action for " + request.getTask_id());
-        val newTask = createTask(taskId, releaseId, studyIds);
-        if (newTask != null) {
-          tasks.put(taskId, newTask);
-
-          newTask.handleAction(action);
+        log.debug("ETL Manager: Initialize action for " + request.getTask_id());
+        try{
+          val newTask = createTask(taskId, releaseId);
+          if (newTask != null) {
+            tasks.put(taskId, newTask);
+            newTask.handleAction(action);
+          }
+        } catch (Throwable t){
+          log.error("ETL Manager: Failed to initialize task request: {}", request);
         }
         break;
-
       default:
-        log.debug("Action for " + request.getTask_id() + ": " + action.name());
-        Task existingTask = tasks.get(taskId);
-        if (existingTask != null) { existingTask.handleAction(action); }
+        log.debug("ETL Manager: Action for " + request.getTask_id() + ": " + action.name());
+        val existingTask = tasks.get(taskId);
+        if (existingTask != null) {
+          existingTask.handleAction(action);
+        }
         break;
     }
   }
@@ -50,6 +52,6 @@ public abstract class TaskManager {
     return tasks.get(taskId);
   }
 
-  protected abstract Task createTask(String taskId, String releaseId, Set<String> studyIds);
+  protected abstract Task createTask(String taskId, String releaseId) throws TaskException;
 
 }

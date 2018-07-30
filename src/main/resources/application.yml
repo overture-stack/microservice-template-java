@@ -1,15 +1,18 @@
 server:
-  port: 1234
+  port: 8088
 
 auth:
   jwt:
     publicKeyUrl: "http://localhost:8081/oauth/token/public_key"
 
+release-coordinator:
+  url: https://kf-release-coord-qa.kidsfirstdrc.org
+
 docker:
   image:
     useLocal: true
   # This can be a tag (if useLocal == false) or an imageId (if useLocal == true)
-    id: <i.e: docker images | head -2 | tail -1>
+    id: <docker images | head -2 | tail -1>
   network:
     id: default
   input:

@@ -54,4 +54,5 @@ public class ETLCoordinatorTaskController {
       .progress(task.getProgress());
     return response.build();
   }
+
 }

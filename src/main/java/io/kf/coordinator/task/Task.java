@@ -23,7 +23,6 @@ public abstract class Task {
     this.release = release;
 
     stateMachine = TaskFSMGenerator.generate();
-
   }
 
   public void handleAction(TaskAction action) {
@@ -49,10 +48,11 @@ public abstract class Task {
   public abstract void cancel();
 
   public TaskFSMStates getState() {
-    return this.stateMachine.getState().getId();
+    return stateMachine.getState().getId();
   }
 
   public float getProgress() {
     return 0;
   }
+
 }

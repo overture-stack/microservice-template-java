@@ -6,9 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
-
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -22,7 +19,5 @@ public class TasksRequest {
   private String task_id;
 
   private String release_id;
-
-  private Set<String> studyIds;
 
 }
