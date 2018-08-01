@@ -18,12 +18,14 @@ import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
+import static io.kf.coordinator.exceptions.TaskException.checkTask;
 import static io.kf.coordinator.utils.Files.getAbsoluteFile;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 // TODO: check that the ES index name doesnt already exist.
 @Slf4j
-public class ETLDockerContainer implements AutoCloseable {
+public class ETLDockerContainer {
 
   private static final Joiner WHITESPACE = Joiner.on(" ");
   private static final String STUDY_ID_ENV_VAR = "KF_STUDY_ID";
@@ -61,7 +63,7 @@ public class ETLDockerContainer implements AutoCloseable {
       @NonNull String etlJarFilePath,
       @NonNull String networkId,
       @NonNull DockerClient docker
-  ) throws InterruptedException, DockerException{
+  ) throws InterruptedException, DockerException {
     this.dockerImage = dockerImage;
     this.useLocal = useLocal;
     this.etlConfFile = getConfFile(etlConfFilePath);
@@ -72,7 +74,8 @@ public class ETLDockerContainer implements AutoCloseable {
     log.info("Instantiated ETL Container controller with image '{}' and network '{}'", dockerImage, networkId);
   }
 
-  public void createContainer(@NonNull Set<String> studyIds, @NonNull String releaseId) throws DockerException, InterruptedException {
+  public void createContainer(@NonNull Set<String> studyIds, @NonNull String releaseId)
+      throws DockerException, InterruptedException {
     log.info("Creating ETLContainer with releaseId '{}'", releaseId);
     val hostConfig = HostConfig.builder()
         .appendBinds(getMountBind(etlConfFile, CONTAINER_CONF_LOC))
@@ -106,20 +109,24 @@ public class ETLDockerContainer implements AutoCloseable {
     checkRunPreconditions();
     docker.startContainer(id);
 
-    this.hasStarted = true;
-    log.info("{} started",getDisplayName());
+    hasStarted = true;
+    log.info("{} started", getDisplayName());
+  }
+
+  public boolean isStarted() {
+    return hasStarted;
   }
 
   public boolean isComplete() throws DockerException, InterruptedException {
     checkContainerCreated();
-    if(hasStarted && !hasFinished) {
+    if (isStarted() && !hasFinished) {
       hasFinished = !isRunning();
-      if (hasFinished){
+      if (hasFinished) {
         val logOutput = getLogs();
-        if (finishedWithErrors()){
+        if (finishedWithErrors()) {
           log.error("{} has completed with ERRORS. Logs: \n{}", getDisplayName(), logOutput);
         } else {
-          log.info("{} has SUCCESSFULLY completed. Logs: \n{}", getDisplayName(),logOutput);
+          log.info("{} has SUCCESSFULLY completed. Logs: \n{}", getDisplayName(), logOutput);
         }
       }
     }
@@ -128,25 +135,82 @@ public class ETLDockerContainer implements AutoCloseable {
 
   public boolean finishedWithErrors() throws DockerException, InterruptedException {
     checkContainerCreated();
-    checkState(isComplete(), "The {} has not started or has not finished", getDisplayName());
+    checkState(isStarted(), "The {} has not started", getDisplayName());
+    checkState(isComplete(), "The {} has not finished", getDisplayName());
     val info = docker.inspectContainer(id);
     return info.state().exitCode() > 0;
   }
 
-  @Override
-  public void close() throws Exception {
-    log.info("Removing {}", getDisplayName());
-    checkContainerCreated();
-    docker.removeContainer(id);
-    docker.close();
-    log.info("Removed {} and closed Docker connection", getDisplayName());
+  /**
+   * Try to kill the docker if it exists and is running
+   *
+   * @throws DockerException
+   * @throws InterruptedException
+   */
+  public void kill() throws DockerException, InterruptedException {
+    if (!isContainerExists()) {
+      log.info("{} does not exist. Aborting kill", getDisplayName());
+    } else if (!isRunning()) {
+      log.info("{} exists and was not running. Aborting kill", getDisplayName());
+    } else {
+      log.info("{} exists and still running. Killing it", getDisplayName());
+      docker.killContainer(id);
+      checkTask(!isRunning(), "Killing of '{}' failed", getDisplayName());
+    }
   }
 
-  private static String createDisplayName(String id){
-    return "ETLContainer["+id.substring(0,13)+"]";
+  /**
+   * Try to remove the container if it exists
+   *
+   * @throws DockerException
+   * @throws InterruptedException
+   */
+  public void remove() throws DockerException, InterruptedException {
+    if (isContainerExists()) {
+      log.info("{} exists. Removing it", getDisplayName());
+      docker.removeContainer(id);
+      checkTask(!isContainerExists(), "Removing of '{}' failed", getDisplayName());
+    } else {
+      log.info("{} does not exist. Aborting remove", getDisplayName());
+    }
   }
 
-  private void checkContainerCreated(){
+  /**
+   * Check if the container exists
+   */
+  public boolean isContainerExists() {
+    try {
+      checkContainerCreated();
+      docker.inspectContainer(id);
+      return true;
+    } catch (Throwable t) {
+      return false;
+    }
+  }
+
+  /**
+   * Try to cancel and remove the container
+   *
+   * @throws DockerException
+   * @throws InterruptedException
+   */
+  public void killAndRemove() throws DockerException, InterruptedException {
+    log.info("Cancelling and removing {}", getDisplayName());
+    kill();
+    val logs = isContainerExists() ? getLogs() : format("%s does not exist, could not retrieve logs", getDisplayName());
+    remove();
+    log.info("Cancelled and removed {}: Logs: {}", getDisplayName(), logs);
+  }
+
+  private static String createDisplayName(String id) {
+    return "ETLContainer[" + id.substring(0, 13) + "]";
+  }
+
+  private void checkContainerExists() {
+    checkState(isContainerExists(), "The {} does not exist", getDisplayName());
+  }
+
+  private void checkContainerCreated() {
     checkState(createdContainer, "The ETLContainer has not been created");
   }
 
@@ -181,25 +245,26 @@ public class ETLDockerContainer implements AutoCloseable {
     }
   }
 
-  private static String getEnvTerm(String envVar, String value){
-    checkArgument(isNotBlank(value), "The env var '%s' cannot have a blank value ", envVar );
-    checkArgument(!Strings.isPaddedWithWhitespace(value), "The value '%s' for env var '%s' cannot be epadded with whitespaces",value, envVar );
+  private static String getEnvTerm(String envVar, String value) {
+    checkArgument(isNotBlank(value), "The env var '%s' cannot have a blank value ", envVar);
+    checkArgument(!Strings.isPaddedWithWhitespace(value),
+        "The value '%s' for env var '%s' cannot be epadded with whitespaces", value, envVar);
     return format("%s=%s", envVar, value);
   }
 
-  private static Bind getMountBind(Path hostFile, String containerFilePath){
+  private static Bind getMountBind(Path hostFile, String containerFilePath) {
     return Bind.from(hostFile.toString())
         .to(containerFilePath)
         .readOnly(true)
         .build();
   }
 
-  private static Path getJarFile(String filename){
+  private static Path getJarFile(String filename) {
     checkArgument(filename.endsWith(".jar"), "The filename '%s' is not a .jar file", filename);
     return getAbsoluteFile(filename);
   }
 
-  private static Path getConfFile(String filename){
+  private static Path getConfFile(String filename) {
     checkArgument(filename.endsWith(".conf"), "The filename '%s' is not a .conf file", filename);
     return getAbsoluteFile(filename);
   }

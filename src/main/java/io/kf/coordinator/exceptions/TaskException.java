@@ -4,7 +4,7 @@ import lombok.NonNull;
 
 import static java.lang.String.format;
 
-public class TaskException extends Exception {
+public class TaskException extends RuntimeException {
 
   public TaskException() {
   }

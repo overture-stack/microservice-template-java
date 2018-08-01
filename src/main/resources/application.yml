@@ -8,6 +8,10 @@ auth:
 release-coordinator:
   url: https://kf-release-coord-qa.kidsfirstdrc.org
 
+task-manager:
+  maxQueueSize: 3
+
+
 docker:
   image:
     useLocal: true

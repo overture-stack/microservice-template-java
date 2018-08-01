@@ -19,9 +19,8 @@ package io.kf.coordinator.config;
 import io.kf.coordinator.jwt.JWTAuthorizationFilter;
 import io.kf.coordinator.jwt.JWTTokenConverter;
 import lombok.SneakyThrows;
-import lombok.val;
-
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -58,11 +57,6 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
   public void configure(HttpSecurity http) {
     http
       .authorizeRequests()
-        .antMatchers("/health").permitAll()
-        .antMatchers("/isAlive").permitAll()
-        .antMatchers("/upload/**").permitAll()
-        .antMatchers("/download/**").permitAll()
-        .antMatchers("/entities/**").permitAll()
         .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**").permitAll()
     .and()
       .authorizeRequests()
@@ -72,6 +66,7 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
         .anyRequest().authenticated()
     .and()
       .addFilterAfter(new JWTAuthorizationFilter(), BasicAuthenticationFilter.class);
+
   }
 
   @Override

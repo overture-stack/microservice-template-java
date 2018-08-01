@@ -13,6 +13,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import static io.kf.coordinator.exceptions.TaskException.checkTask;
@@ -30,7 +31,9 @@ public class ETLTaskManager extends TaskManager {
   @Autowired
   public ETLTaskManager(@NonNull ReleaseService releaseService,
       @NonNull ETLDockerContainerConfig config,
-      @NonNull DockerClient docker) {
+      @NonNull DockerClient docker,
+      @Value("${task-manager.maxQueueSize}") int maxQueueSize) {
+    super(maxQueueSize);
     this.releaseService = releaseService;
     this.config = config;
     this.docker = docker;

@@ -1,8 +1,8 @@
 package io.kf.coordinator.task;
 
-import io.kf.coordinator.task.fsm.states.TaskFSMStates;
 import io.kf.coordinator.task.fsm.config.TaskFSMGenerator;
 import io.kf.coordinator.task.fsm.events.TaskFSMEvents;
+import io.kf.coordinator.task.fsm.states.TaskFSMStates;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
