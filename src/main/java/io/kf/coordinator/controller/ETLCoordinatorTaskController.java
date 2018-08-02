@@ -52,7 +52,7 @@ public class ETLCoordinatorTaskController {
     // TODO: Handle task == null case
     return TasksDTO.builder()
         .task_id(request.getTask_id())
-        .release_id(request.getRelease_id())
+        .release_id(task.getRelease())
         .state(task.getState())
         .progress(task.getProgress())
         .build();
