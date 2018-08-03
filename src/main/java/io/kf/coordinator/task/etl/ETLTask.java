@@ -2,6 +2,7 @@ package io.kf.coordinator.task.etl;
 
 import com.spotify.docker.client.exceptions.DockerException;
 import io.kf.coordinator.exceptions.IllegalEventRequestException;
+import io.kf.coordinator.service.PublishService;
 import io.kf.coordinator.task.Task;
 import io.kf.coordinator.task.fsm.events.TaskFSMEvents;
 import io.kf.coordinator.task.fsm.states.TaskFSMStates;
@@ -29,20 +30,23 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 public class ETLTask extends Task {
 
   private final ETLDockerContainer etl;
-  private final Set<String> studyIds;
+  private final PublishService publishService;
+  @Getter private final Set<String> studies;
 
   @Getter
   @JsonIgnore
   private final String displayName;
 
   public ETLTask(@NonNull ETLDockerContainer etl,
+      @NonNull PublishService publishService,
       @NonNull String id,
-      @NonNull String releaseId,
-      @NonNull Set<String> studyIds) throws Exception {
-    super(id, releaseId);
+      @NonNull String release,
+      @NonNull Set<String> studies) throws Exception {
+    super(id, release);
     this.etl = etl;
-    this.studyIds = studyIds;
+    this.studies = studies;
     this.displayName = format("ETL Task [%s]", id);
+    this.publishService = publishService;
   }
 
   //TODO: sanitize studyIds and release at instantiation phase and if not good, put in REJECT state
@@ -50,11 +54,11 @@ public class ETLTask extends Task {
   @Override
   public void initialize() {
     log.info("{} Initializing ...", getDisplayName());
-    if (!studyIds.isEmpty() && isNotBlank(release)) {
+    if (!getStudies().isEmpty() && isNotBlank(getRelease())) {
       sendEvent(INITIALIZE, new EventCallback() {
 
         @Override public void onRun() throws Throwable {
-          etl.createContainer(studyIds, release);
+          etl.createContainer(getStudies(), getRelease());
           log.info("{} -> PENDING.", getDisplayName());
         }
 
@@ -136,14 +140,9 @@ public class ETLTask extends Task {
     sendEvent(PUBLISH, new EventCallback() {
 
       @Override public void onRun() throws Throwable {
-        boolean rollCallResult = executeRollCall();
-        if (rollCallResult) {
-          sendEvent(PUBLISHING_DONE);
-          log.info("{} -> PUBLISHED.", getDisplayName());
-        } else {
-          fail();
-          log.info("{} -> PUBLISHING failed", getDisplayName());
-        }
+        publishService.publishRelease(getRelease(), getStudies());
+        sendEvent(PUBLISHING_DONE);
+        log.info("{} -> PUBLISHED.", getDisplayName());
       }
 
       @Override public void onError(Throwable t) {
@@ -154,10 +153,6 @@ public class ETLTask extends Task {
     });
   }
 
-  private boolean executeRollCall() {
-    // Stub. Make call to RollCall, and return true if a 200, and false otherwise
-    throw new IllegalEventRequestException("RollCall not incorporated yet");
-  }
 
   @Override
   public void cancel() {
@@ -193,6 +188,7 @@ public class ETLTask extends Task {
     if (!stateMachine.sendEvent(event)) {
       val message = format("ERROR %s: the current state '%s' cannot process the event '%s'",
           getDisplayName(), stateMachine.getState().getId(), event);
+      log.error(message);
       throw new IllegalEventRequestException(message);
     }
   }

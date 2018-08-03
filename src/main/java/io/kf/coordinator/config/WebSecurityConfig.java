@@ -21,12 +21,17 @@ import io.kf.coordinator.jwt.JWTTokenConverter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
@@ -37,9 +42,14 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+
+import static java.lang.String.format;
+import static java.util.Collections.singletonList;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Slf4j
 @EnableWebSecurity
@@ -51,6 +61,18 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Value("${auth.jwt.publicKeyUrl}")
   private String publicKeyUrl;
+
+  @Value("${rollcall.auth.enable}")
+  private boolean enableRollCallAuth;
+
+  @Value("${rollcall.auth.token}")
+  private String rollCallAccessToken;
+
+  @Value("${release-coordinator.auth.enable}")
+  private boolean enableReleaseCoordinatorAuth;
+
+  @Value("${release-coordinator.auth.token}")
+  private String releaseCoordinatorAccessToken;
 
   @Override
   @SneakyThrows
@@ -94,6 +116,24 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
     return defaultTokenServices;
   }
 
+  @Bean
+  public RestTemplate rollCallTemplate(){
+    if (enableRollCallAuth){
+      return new RestTemplate(clientHttpRequestFactory(rollCallAccessToken));
+    } else {
+      return new RestTemplate();
+    }
+  }
+
+  @Bean
+  public RestTemplate releaseCoordinatorTemplate(){
+    if (enableReleaseCoordinatorAuth){
+      return new RestTemplate(clientHttpRequestFactory(releaseCoordinatorAccessToken));
+    } else {
+      return new RestTemplate();
+    }
+  }
+
   /**
    * Call EGO server for public key to use when verifying JWTs
    * Pass this value to the JWTTokenConverter
@@ -108,6 +148,34 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
 
     reader.lines().forEach(stringBuilder::append);
     return stringBuilder.toString();
+  }
+
+  private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory(String accessToken) {
+    val factory = new HttpComponentsClientHttpRequestFactory();
+    factory.setHttpClient(secureClient(accessToken));
+    return factory;
+  }
+
+  private HttpClient secureClient(String accessToken){
+    val client = HttpClients.custom();
+    configureOAuth(client, accessToken);
+    return client.build();
+  }
+
+  /**
+   * Populates Authorization header with OAuth token
+   * @param HttpClientBuilder instance to set Default Header on. Existing Headers will be overwritten.
+   */
+  private void configureOAuth(HttpClientBuilder client, String accessToken) {
+
+    val defined = (accessToken != null) && (!accessToken.isEmpty());
+    if (defined) {
+      log.trace("Setting access token: {}", accessToken);
+      client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
+    } else {
+      // Omit header if access token is null/empty in configuration (application.yml and conf/properties file
+      log.warn("No access token specified");
+    }
   }
 
 }

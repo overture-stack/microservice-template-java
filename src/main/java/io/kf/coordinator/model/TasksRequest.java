@@ -1,4 +1,4 @@
-package io.kf.coordinator.dto;
+package io.kf.coordinator.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.kf.coordinator.task.TaskAction;

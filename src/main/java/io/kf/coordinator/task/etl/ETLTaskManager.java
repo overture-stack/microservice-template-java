@@ -4,9 +4,10 @@ import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import io.kf.coordinator.config.ETLDockerContainerConfig;
-import io.kf.coordinator.dto.ReleaseResponse;
 import io.kf.coordinator.exceptions.TaskException;
-import io.kf.coordinator.service.release.ReleaseService;
+import io.kf.coordinator.model.ReleaseResponse;
+import io.kf.coordinator.service.ReleaseService;
+import io.kf.coordinator.service.PublishService;
 import io.kf.coordinator.task.Task;
 import io.kf.coordinator.task.TaskManager;
 import lombok.NonNull;
@@ -27,9 +28,11 @@ public class ETLTaskManager extends TaskManager {
   private final ETLDockerContainerConfig config;
   private final ReleaseService releaseService;
   private final DockerClient docker;
+  private final PublishService publishService;
 
   @Autowired
   public ETLTaskManager(@NonNull ReleaseService releaseService,
+      @NonNull PublishService publishService,
       @NonNull ETLDockerContainerConfig config,
       @NonNull DockerClient docker,
       @Value("${task-manager.maxQueueSize}") int maxQueueSize) {
@@ -37,6 +40,7 @@ public class ETLTaskManager extends TaskManager {
     this.releaseService = releaseService;
     this.config = config;
     this.docker = docker;
+    this.publishService = publishService;
   }
 
   @Override
@@ -51,7 +55,7 @@ public class ETLTaskManager extends TaskManager {
         "ETL Task ERROR[%s]: Must have at least one studyId for the release '%s'", taskId, releaseId);
 
     try {
-      return new ETLTask(createETLDockerContainer(taskId), taskId, releaseId, studyIds);
+      return new ETLTask(createETLDockerContainer(taskId), publishService, taskId, releaseId, studyIds);
     } catch (Exception e) {
       throw new TaskException(
           format("ETL Task ERROR[%s]: Could not create new Task for release '%s': %s",

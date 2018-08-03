@@ -1,8 +1,8 @@
 package io.kf.coordinator.controller;
 
-import io.kf.coordinator.dto.StatusDTO;
-import io.kf.coordinator.dto.TasksDTO;
-import io.kf.coordinator.dto.TasksRequest;
+import io.kf.coordinator.model.dto.StatusDTO;
+import io.kf.coordinator.model.dto.TasksDTO;
+import io.kf.coordinator.model.TasksRequest;
 import io.kf.coordinator.task.etl.ETLTaskManager;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;

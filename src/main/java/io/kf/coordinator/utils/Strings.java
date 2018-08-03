@@ -1,5 +1,6 @@
 package io.kf.coordinator.utils;
 
+import com.google.common.base.Joiner;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
@@ -9,6 +10,7 @@ import static lombok.AccessLevel.PRIVATE;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Strings {
+
   private static final String NEWLINE = "\n";
 
   public static boolean isPaddedWithWhitespace(String value){

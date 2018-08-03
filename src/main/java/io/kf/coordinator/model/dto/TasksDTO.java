@@ -1,4 +1,4 @@
-package io.kf.coordinator.dto;
+package io.kf.coordinator.model.dto;
 
 import io.kf.coordinator.task.fsm.states.TaskFSMStates;
 import lombok.Builder;

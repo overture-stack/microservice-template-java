@@ -1,4 +1,4 @@
-package io.kf.coordinator.dto;
+package io.kf.coordinator.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
