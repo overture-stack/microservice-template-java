@@ -143,6 +143,9 @@ public class ETLTask extends Task {
         publishService.publishRelease(getRelease(), getStudies());
         sendEvent(PUBLISHING_DONE);
         log.info("{} -> PUBLISHED.", getDisplayName());
+        log.info("{} Cleaning up....", getDisplayName());
+        etl.killAndRemove();
+        log.info("{} cleaned", getDisplayName());
       }
 
       @Override public void onError(Throwable t) {
@@ -151,6 +154,7 @@ public class ETLTask extends Task {
             getDisplayName(), t.getClass().getSimpleName(), t.getMessage(), extractStackTrace(t));
       }
     });
+
   }
 
 

@@ -42,27 +42,31 @@ public class PublishService {
 
   List<PublishReleaseError> validateCandidates(List<AliasCandidate> aliasCandidates, String expectedRelease,
       Set<String> expectedStudies){
+    val lcExpectedRelease = expectedRelease.toLowerCase();
+    val lcExpectedStudies = expectedStudies.stream().map(String::toLowerCase).collect(toImmutableSet());
     val errors = ImmutableList.<PublishReleaseError>builder();
     for (val candidate : aliasCandidates){
       val aliasName = candidate.getAlias().getAlias();
       val indices = candidate.getIndices();
       val foundRelease = indices.stream()
           .map(x -> UNDERSCORE.join(x.getReleasePrefix(), x.getRelease()))
-          .anyMatch(x -> x.equals(expectedRelease));
+          .map(String::toLowerCase)
+          .anyMatch(x -> x.equals(lcExpectedRelease));
 
       val actualStudies = indices.stream()
           .map(x -> UNDERSCORE.join(x.getShardPrefix(), x.getShard()))
+          .map(String::toLowerCase)
           .collect(toImmutableSet());
 
-      val foundAllStudies = actualStudies.containsAll(expectedStudies);
+      val foundAllStudies = actualStudies.containsAll(lcExpectedStudies);
 
       if (!foundRelease || !foundAllStudies){
         val error = PublishReleaseError.builder()
             .alias(aliasName)
             .expectedRelease(expectedRelease)
             .missingRelease(foundRelease)
-            .expectedStudies(expectedStudies)
-            .missingStudies(expectedStudies.stream()
+            .expectedStudies(lcExpectedStudies)
+            .missingStudies(lcExpectedStudies.stream()
                 .filter(x -> !actualStudies.contains(x))
                 .collect(toImmutableSet()))
             .build();
