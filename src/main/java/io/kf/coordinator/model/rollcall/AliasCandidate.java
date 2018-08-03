@@ -6,6 +6,6 @@ import java.util.List;
 
 @Data
 public class AliasCandidate {
-  private ConfiguredAlias configuredAlias;
+  private ConfiguredAlias alias;
   private List<ResolvedIndex> indices;
 }

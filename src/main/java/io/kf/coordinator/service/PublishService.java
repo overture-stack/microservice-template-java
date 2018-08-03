@@ -44,7 +44,7 @@ public class PublishService {
       Set<String> expectedStudies){
     val errors = ImmutableList.<PublishReleaseError>builder();
     for (val candidate : aliasCandidates){
-      val aliasName = candidate.getConfiguredAlias().getAlias();
+      val aliasName = candidate.getAlias().getAlias();
       val indices = candidate.getIndices();
       val foundRelease = indices.stream()
           .map(x -> UNDERSCORE.join(x.getReleasePrefix(), x.getRelease()))
@@ -84,7 +84,7 @@ public class PublishService {
 
   private static Set<String> extractAliases(List<AliasCandidate> candidates){
     return candidates.stream()
-        .map(AliasCandidate::getConfiguredAlias)
+        .map(AliasCandidate::getAlias)
         .map(ConfiguredAlias::getAlias)
         .collect(toImmutableSet());
   }

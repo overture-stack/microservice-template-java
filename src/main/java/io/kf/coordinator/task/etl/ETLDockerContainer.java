@@ -248,8 +248,8 @@ public class ETLDockerContainer {
   private static String getEnvTerm(String envVar, String value) {
     checkArgument(isNotBlank(value), "The env var '%s' cannot have a blank value ", envVar);
     checkArgument(!Strings.isPaddedWithWhitespace(value),
-        "The value '%s' for env var '%s' cannot be epadded with whitespaces", value, envVar);
-    return format("%s=%s", envVar, value);
+        "The value '%s' for env var '%s' cannot be padded with whitespaces", value, envVar);
+    return format("%s=\"%s\"", envVar, value);
   }
 
   private static Bind getMountBind(Path hostFile, String containerFilePath) {
