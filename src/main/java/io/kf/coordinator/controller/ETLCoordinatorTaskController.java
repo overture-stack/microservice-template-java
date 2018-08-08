@@ -31,9 +31,6 @@ public class ETLCoordinatorTaskController {
     return StatusDTO.builder()
         //TODO: Logic to check if service is available
         .message(STATUS_READY)
-        .queueSize(taskManager.getMaxQueueSize())
-        .queuedTasks(
-            taskManager.getQueuedTasks())
         .build();
   }
 

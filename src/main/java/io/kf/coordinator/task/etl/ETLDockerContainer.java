@@ -1,6 +1,5 @@
 package io.kf.coordinator.task.etl;
 
-import com.google.common.base.Joiner;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerClient.LogsParam;
 import com.spotify.docker.client.exceptions.DockerException;
@@ -20,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static io.kf.coordinator.exceptions.TaskException.checkTask;
 import static io.kf.coordinator.utils.Files.getAbsoluteFile;
+import static io.kf.coordinator.utils.Joiners.WHITESPACE;
 import static java.lang.String.format;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -27,7 +27,6 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 @Slf4j
 public class ETLDockerContainer {
 
-  private static final Joiner WHITESPACE = Joiner.on(" ");
   private static final String STUDY_ID_ENV_VAR = "KF_STUDY_ID";
   private static final String RELEASE_ID_ENV_VAR = "KF_RELEASE_ID";
   private static final String CONTAINER_CONF_LOC = "/kf-etl/mnt/conf/kf_etl.conf";

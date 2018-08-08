@@ -1,27 +1,20 @@
 package io.kf.coordinator.task;
 
-import com.google.common.collect.ImmutableList;
 import io.kf.coordinator.exceptions.TaskException;
 import io.kf.coordinator.exceptions.TaskManagerException;
 import io.kf.coordinator.exceptions.TaskNotFoundException;
 import io.kf.coordinator.model.TasksRequest;
-import io.kf.coordinator.model.dto.TasksDTO;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Queue;
 
-import static com.google.common.collect.Queues.newLinkedBlockingQueue;
 import static io.kf.coordinator.exceptions.TaskManagerException.checkTaskManager;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.toList;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,33 +22,9 @@ public abstract class TaskManager {
   private static final String ETL_MANAGER = "ETL Manager:";
 
   /**
-   * Config
-   */
-  @Getter private final int maxQueueSize;
-
-  /**
    * State
    */
   private Map<String, Task> tasks = new HashMap<>();
-  private final Queue<String> runningTaskQueue;
-
-  public TaskManager(int maxQueueSize) {
-    this.maxQueueSize = maxQueueSize;
-    this.runningTaskQueue = maxQueueSize < 1 ?
-        newLinkedBlockingQueue() : newLinkedBlockingQueue(maxQueueSize);
-  }
-
-  public List<TasksDTO> getQueuedTasks(){
-    return ImmutableList.copyOf(runningTaskQueue.stream()
-        .map(x -> tasks.get(x))
-        .map(x -> TasksDTO.builder()
-            .release_id(x.getRelease())
-            .state(x.getState())
-            .task_id(x.getId())
-            .progress(x.getProgress())
-            .build())
-        .collect(toList()));
-  }
 
   public void dispatch(TasksRequest request) {
     val taskId = request.getTask_id();
@@ -140,9 +109,6 @@ public abstract class TaskManager {
     }
     checkTaskManager(!isNull(task),
         "Null task for Task id '%s' with release '%s'", taskId, releaseId);
-    //            checkTaskManager(!isQueueFull(),
-    //                  "The task queue is full with a max size of %s", maxQueueSize);
-    //            runningTaskQueue.add(newTask.getId());
     addTask(task);
     return task;
   }

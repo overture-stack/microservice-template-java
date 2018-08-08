@@ -6,15 +6,14 @@ import com.spotify.docker.client.exceptions.DockerException;
 import io.kf.coordinator.config.ETLDockerContainerConfig;
 import io.kf.coordinator.exceptions.TaskException;
 import io.kf.coordinator.model.ReleaseResponse;
-import io.kf.coordinator.service.ReleaseService;
 import io.kf.coordinator.service.PublishService;
+import io.kf.coordinator.service.ReleaseService;
 import io.kf.coordinator.task.Task;
 import io.kf.coordinator.task.TaskManager;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import static io.kf.coordinator.exceptions.TaskException.checkTask;
@@ -34,9 +33,7 @@ public class ETLTaskManager extends TaskManager {
   public ETLTaskManager(@NonNull ReleaseService releaseService,
       @NonNull PublishService publishService,
       @NonNull ETLDockerContainerConfig config,
-      @NonNull DockerClient docker,
-      @Value("${task-manager.maxQueueSize}") int maxQueueSize) {
-    super(maxQueueSize);
+      @NonNull DockerClient docker) {
     this.releaseService = releaseService;
     this.config = config;
     this.docker = docker;
