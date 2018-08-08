@@ -1,6 +1,31 @@
 server:
-  port: 1234
+  port: 8088
 
 auth:
   jwt:
     publicKeyUrl: "http://localhost:8081/oauth/token/public_key"
+
+release-coordinator:
+  url: https://kf-release-coord-qa.kidsfirstdrc.org
+  # used to make secure REST calls to release coordinator
+  auth:
+    enable: false
+    token: sdfnu238o9jfsd
+
+rollcall:
+  url: http://localhost:8080
+  # used to make secure REST calls to rollcall
+  auth:
+    enable: false
+    token: sdfjklskdf90jiol2jkn
+
+docker:
+  image:
+    useLocal: true
+  # This can be a tag (if useLocal == false) or an imageId (if useLocal == true)
+    id: <docker images | head -2 | tail -1>
+  network:
+    id: default
+  input:
+    conf: <path to kf_etl.conf file>
+    jar: <path to kf-portal-etl.jar file>

@@ -81,6 +81,11 @@ public class TaskFSMGenerator {
         .source(TaskFSMStates.STAGED)
         .target(TaskFSMStates.CANCELED)
         .event(TaskFSMEvents.CANCEL)
+      .and()
+      .withExternal()
+        .source(TaskFSMStates.PUBLISHING)
+        .target(TaskFSMStates.CANCELED)
+        .event(TaskFSMEvents.CANCEL)
 
       // FAIL Transitions
       .and()
@@ -91,6 +96,11 @@ public class TaskFSMGenerator {
       .and()
       .withExternal()
         .source(TaskFSMStates.RUNNING)
+        .target(TaskFSMStates.FAILED)
+        .event(TaskFSMEvents.FAIL)
+      .and()
+      .withExternal()
+        .source(TaskFSMStates.STAGED)
         .target(TaskFSMStates.FAILED)
         .event(TaskFSMEvents.FAIL)
       .and()

@@ -1,8 +1,8 @@
 package io.kf.coordinator.task;
 
-import io.kf.coordinator.task.fsm.states.TaskFSMStates;
 import io.kf.coordinator.task.fsm.config.TaskFSMGenerator;
 import io.kf.coordinator.task.fsm.events.TaskFSMEvents;
+import io.kf.coordinator.task.fsm.states.TaskFSMStates;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,6 @@ public abstract class Task {
     this.release = release;
 
     stateMachine = TaskFSMGenerator.generate();
-
   }
 
   public void handleAction(TaskAction action) {
@@ -49,10 +48,11 @@ public abstract class Task {
   public abstract void cancel();
 
   public TaskFSMStates getState() {
-    return this.stateMachine.getState().getId();
+    return stateMachine.getState().getId();
   }
 
   public float getProgress() {
     return 0;
   }
+
 }

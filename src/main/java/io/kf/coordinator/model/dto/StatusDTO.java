@@ -1,4 +1,4 @@
-package io.kf.coordinator.dto;
+package io.kf.coordinator.model.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -10,4 +10,5 @@ public class StatusDTO {
   @Builder.Default private String name = "KF ETL Task Runner!";
                    private String message;
   @Builder.Default private String version = "0.0.1";
+
 }

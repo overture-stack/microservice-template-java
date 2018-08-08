@@ -1,108 +1,271 @@
 package io.kf.coordinator.task.etl;
 
-import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.LogStream;
-import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.DockerClient.LogsParam;
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.*;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.HostConfig.Bind;
+import io.kf.coordinator.utils.Strings;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static io.kf.coordinator.exceptions.TaskException.checkTask;
+import static io.kf.coordinator.utils.Files.getAbsoluteFile;
+import static io.kf.coordinator.utils.Joiners.WHITESPACE;
+import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
+// TODO: check that the ES index name doesnt already exist.
+@Slf4j
 public class ETLDockerContainer {
 
-  public DockerClient docker;
+  private static final String STUDY_ID_ENV_VAR = "KF_STUDY_ID";
+  private static final String RELEASE_ID_ENV_VAR = "KF_RELEASE_ID";
+  private static final String CONTAINER_CONF_LOC = "/kf-etl/mnt/conf/kf_etl.conf";
+  private static final String CONTAINER_JAR_LOC = "/kf-etl/mnt/lib/kf-portal-etl.jar";
+
+  /**
+   * Config
+   */
+  private final String dockerImage;
+  private final boolean useLocal;
+  private final Path etlConfFile;
+  private final Path etlJarFile;
+  private final String networkId;
+
+  /**
+   * Dependencies
+   */
+  private final DockerClient docker;
+
+  /**
+   * State
+   */
   private String id;
-
-  final private static String dockerImage = "busybox:latest";
-  final private static String[] ports = {};
-
+  @Getter private String displayName;
+  private boolean createdContainer = false;
   private boolean hasStarted = false;
   private boolean hasFinished = false;
 
-  private String dockerMainCommand = "for i in `seq 1 60`; do sleep 1; echo $i; done";
-  private String dockerTriggeredCommand = "echo \"DOCKER RECEIVED RUN COMMAND\"";
-
-  public ETLDockerContainer() throws DockerCertificateException, DockerException, InterruptedException {
-    docker = DefaultDockerClient.fromEnv().build();
-
-    docker.pull(dockerImage);
+  public ETLDockerContainer(
+      @NonNull String dockerImage,
+      boolean useLocal,
+      @NonNull String etlConfFilePath,
+      @NonNull String etlJarFilePath,
+      @NonNull String networkId,
+      @NonNull DockerClient docker
+  ) throws InterruptedException, DockerException {
+    this.dockerImage = dockerImage;
+    this.useLocal = useLocal;
+    this.etlConfFile = getConfFile(etlConfFilePath);
+    this.etlJarFile = getJarFile(etlJarFilePath);
+    this.docker = docker;
+    this.networkId = networkId;
+    initImage();
+    log.info("Instantiated ETL Container controller with image '{}' and network '{}'", dockerImage, networkId);
   }
 
-  public void startContainer() throws DockerException, InterruptedException {
-    // Bind container ports to host ports
-    final Map<String, List<PortBinding>> portBindings = new HashMap<>();
-    for (String port : ports) {
-      List<PortBinding> hostPorts = new ArrayList<>();
-      hostPorts.add(PortBinding.of("0.0.0.0", "11"+port));
-      portBindings.put(port, hostPorts);
-    }
-
-    // Bind container port 443 to an automatically allocated available host port.
-    List<PortBinding> randomPort = new ArrayList<>();
-    randomPort.add(PortBinding.randomPort("0.0.0.0"));
-    portBindings.put("443", randomPort);
-
-    final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
+  public void createContainer(@NonNull Set<String> studyIds, @NonNull String releaseId)
+      throws DockerException, InterruptedException {
+    log.info("Creating ETLContainer with releaseId '{}'", releaseId);
+    val hostConfig = HostConfig.builder()
+        .appendBinds(getMountBind(etlConfFile, CONTAINER_CONF_LOC))
+        .appendBinds(getMountBind(etlJarFile, CONTAINER_JAR_LOC))
+        .build();
 
     // Create container with exposed ports
-    final ContainerConfig containerConfig = ContainerConfig.builder()
-      .hostConfig(hostConfig)
-      .image(dockerImage).exposedPorts(ports)
-      .cmd("sh", "-c", dockerMainCommand)
-      .build();
+    val containerConfig = ContainerConfig.builder()
+        .hostConfig(hostConfig)
+        .image(dockerImage)
+        .env(
+            getEnvTerm(RELEASE_ID_ENV_VAR, releaseId),
+            getEnvTerm(STUDY_ID_ENV_VAR, WHITESPACE.join(studyIds))
+        )
+        .build();
 
-    final ContainerCreation creation = docker.createContainer(containerConfig);
-    this.id = creation.id();
+    checkRunPreconditions();
+    val creation = docker.createContainer(containerConfig);
 
+    id = creation.id();
+    displayName = createDisplayName(id);
 
-
-
-
+    docker.connectToNetwork(id, networkId);
+    log.info("Created {} with release '{}'", getDisplayName(), releaseId);
+    createdContainer = true;
   }
 
   public void runETL() throws DockerException, InterruptedException {
+    checkContainerCreated();
+    log.info("Starting {}", getDisplayName());
+    checkRunPreconditions();
     docker.startContainer(id);
-    // Start container
 
-    // Exec command inside running container with attached STDOUT and STDERR
-//    final String[] command = {"sh", "-c", dockerTriggeredCommand};
-//    final ExecCreation execCreation = docker.execCreate(
-//      this.id, command, DockerClient.ExecCreateParam.attachStdout(),
-//      DockerClient.ExecCreateParam.attachStderr());
-//    final LogStream output = docker.execStart(execCreation.id());
-//    final String execOutput = output.readFully();
-
-    this.hasStarted = true;
+    hasStarted = true;
+    log.info("{} started", getDisplayName());
   }
 
-  public boolean isComplete() {
+  public boolean isStarted() {
+    return hasStarted;
+  }
 
-    if(this.hasStarted && !this.hasFinished) {
-      this.hasFinished = this.checkFinished();
+  public boolean isComplete() throws DockerException, InterruptedException {
+    checkContainerCreated();
+    if (isStarted() && !hasFinished) {
+      hasFinished = !isRunning();
+      if (hasFinished) {
+        val logOutput = getLogs();
+        if (finishedWithErrors()) {
+          log.error("{} has completed with ERRORS. Logs: \n{}", getDisplayName(), logOutput);
+        } else {
+          log.info("{} has SUCCESSFULLY completed. Logs: \n{}", getDisplayName(), logOutput);
+        }
+      }
     }
-
-    return this.hasFinished;
+    return hasFinished;
   }
 
-  private boolean checkFinished() {
-    // Inspect container
+  public boolean finishedWithErrors() throws DockerException, InterruptedException {
+    checkContainerCreated();
+    checkState(isStarted(), "The {} has not started", getDisplayName());
+    checkState(isComplete(), "The {} has not finished", getDisplayName());
+    val info = docker.inspectContainer(id);
+    return info.state().exitCode() > 0;
+  }
+
+  /**
+   * Try to kill the docker if it exists and is running
+   *
+   * @throws DockerException
+   * @throws InterruptedException
+   */
+  public void kill() throws DockerException, InterruptedException {
+    if (!isContainerExists()) {
+      log.info("{} does not exist. Aborting kill", getDisplayName());
+    } else if (!isRunning()) {
+      log.info("{} exists and was not running. Aborting kill", getDisplayName());
+    } else {
+      log.info("{} exists and still running. Killing it", getDisplayName());
+      docker.killContainer(id);
+      checkTask(!isRunning(), "Killing of '{}' failed", getDisplayName());
+    }
+  }
+
+  /**
+   * Try to remove the container if it exists
+   *
+   * @throws DockerException
+   * @throws InterruptedException
+   */
+  public void remove() throws DockerException, InterruptedException {
+    if (isContainerExists()) {
+      log.info("{} exists. Removing it", getDisplayName());
+      docker.removeContainer(id);
+      checkTask(!isContainerExists(), "Removing of '{}' failed", getDisplayName());
+    } else {
+      log.info("{} does not exist. Aborting remove", getDisplayName());
+    }
+  }
+
+  /**
+   * Check if the container exists
+   */
+  public boolean isContainerExists() {
     try {
-
-      final ContainerInfo info = docker.inspectContainer(this.id);
-      return !info.state().running();
-
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    } catch (DockerException e) {
-      e.printStackTrace();
+      checkContainerCreated();
+      docker.inspectContainer(id);
+      return true;
+    } catch (Throwable t) {
+      return false;
     }
-    return false;
-
   }
 
+  /**
+   * Try to cancel and remove the container
+   *
+   * @throws DockerException
+   * @throws InterruptedException
+   */
+  public void killAndRemove() throws DockerException, InterruptedException {
+    log.info("Cancelling and removing {}", getDisplayName());
+    kill();
+    val logs = isContainerExists() ? getLogs() : format("%s does not exist, could not retrieve logs", getDisplayName());
+    remove();
+    log.info("Cancelled and removed {}: Logs: {}", getDisplayName(), logs);
+  }
+
+  private static String createDisplayName(String id) {
+    return "ETLContainer[" + id.substring(0, 13) + "]";
+  }
+
+  private void checkContainerExists() {
+    checkState(isContainerExists(), "The {} does not exist", getDisplayName());
+  }
+
+  private void checkContainerCreated() {
+    checkState(createdContainer, "The ETLContainer has not been created");
+  }
+
+  private boolean isRunning() throws DockerException, InterruptedException {
+    val info = docker.inspectContainer(this.id);
+    return info.state().running();
+  }
+
+  private void checkImageExists(String dockerImage) throws DockerException, InterruptedException {
+    docker.inspectImage(dockerImage);
+  }
+
+  private void checkNetworkExists(String networkId) throws DockerException, InterruptedException {
+    docker.inspectNetwork(networkId);
+  }
+
+  private void initImage() throws DockerException, InterruptedException {
+    if (!useLocal) {
+      docker.pull(dockerImage);
+    }
+  }
+
+  private void checkRunPreconditions() throws DockerException, InterruptedException {
+    checkNetworkExists(networkId);
+    checkImageExists(dockerImage);
+  }
+
+  private String getLogs() throws DockerException, InterruptedException {
+    checkContainerCreated();
+    try (val stream = docker.logs(id, LogsParam.stdout(), LogsParam.stderr())) {
+      return stream.readFully();
+    }
+  }
+
+  private static String getEnvTerm(String envVar, String value) {
+    checkArgument(isNotBlank(value), "The env var '%s' cannot have a blank value ", envVar);
+    checkArgument(!Strings.isPaddedWithWhitespace(value),
+        "The value '%s' for env var '%s' cannot be padded with whitespaces", value, envVar);
+    return format("%s=\"%s\"", envVar, value);
+  }
+
+  private static Bind getMountBind(Path hostFile, String containerFilePath) {
+    return Bind.from(hostFile.toString())
+        .to(containerFilePath)
+        .readOnly(true)
+        .build();
+  }
+
+  private static Path getJarFile(String filename) {
+    checkArgument(filename.endsWith(".jar"), "The filename '%s' is not a .jar file", filename);
+    return getAbsoluteFile(filename);
+  }
+
+  private static Path getConfFile(String filename) {
+    checkArgument(filename.endsWith(".conf"), "The filename '%s' is not a .conf file", filename);
+    return getAbsoluteFile(filename);
+  }
 
 }

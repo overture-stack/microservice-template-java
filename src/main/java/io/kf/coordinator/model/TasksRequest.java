@@ -1,20 +1,23 @@
-package io.kf.coordinator.dto;
+package io.kf.coordinator.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.kf.coordinator.task.TaskAction;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 @Data
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TasksRequest {
 
-  @NonNull
   private TaskAction action;
-  @NonNull
+
   private String task_id;
-  // Optional
+
   private String release_id;
+
 }
