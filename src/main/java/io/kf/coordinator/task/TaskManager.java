@@ -1,7 +1,6 @@
 package io.kf.coordinator.task;
 
 import com.google.common.collect.ImmutableList;
-import io.kf.coordinator.exceptions.TaskAlreadyExistsException;
 import io.kf.coordinator.exceptions.TaskException;
 import io.kf.coordinator.exceptions.TaskManagerException;
 import io.kf.coordinator.exceptions.TaskNotFoundException;
@@ -27,7 +26,7 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class TaskManager {
-  private static final String ETL_MANAGER = "ETL Manager";
+  private static final String ETL_MANAGER = "ETL Manager:";
 
   /**
    * Config
@@ -46,11 +45,6 @@ public abstract class TaskManager {
         newLinkedBlockingQueue() : newLinkedBlockingQueue(maxQueueSize);
   }
 
-  private boolean isQueueFull(){
-    return runningTaskQueue.size() >= maxQueueSize;
-  }
-
-
   public List<TasksDTO> getQueuedTasks(){
     return ImmutableList.copyOf(runningTaskQueue.stream()
         .map(x -> tasks.get(x))
@@ -61,6 +55,44 @@ public abstract class TaskManager {
             .progress(x.getProgress())
             .build())
         .collect(toList()));
+  }
+
+  public void dispatch(TasksRequest request) {
+    val taskId = request.getTask_id();
+    val releaseId = request.getRelease_id();
+    val action = request.getAction();
+
+    switch(action) {
+
+      case status:
+        // No action to take
+        break;
+
+      case initialize:
+        log.debug("{} Initialize action for {}", ETL_MANAGER, request.getTask_id());
+        try{
+          val task = registerTask(taskId, releaseId);
+          task.handleAction(action);
+        } catch (Throwable t){
+          log.error("{} Failed to initialize task request {}: [{}] -> {}",
+              ETL_MANAGER, request, t.getClass().getSimpleName(), t.getMessage());
+          throw t;
+        }
+        break;
+      default:
+        log.debug("{} Action for {}: {}", ETL_MANAGER, request.getTask_id(), action.name());
+        checkTaskExists(taskId);
+        val existingTask = tasks.get(taskId);
+        if (existingTask != null) {
+          existingTask.handleAction(action);
+        }
+        break;
+    }
+  }
+
+  public Task getTask(String taskId) {
+    checkTaskExists(taskId);
+    return tasks.get(taskId);
   }
 
   private boolean isTaskExist(String taskId){
@@ -79,44 +111,6 @@ public abstract class TaskManager {
 
   private Optional<Task> findTask(String taskId){
     return Optional.ofNullable(tasks.get(taskId));
-  }
-
-  public void dispatch(TasksRequest request) {
-    val taskId = request.getTask_id();
-    val releaseId = request.getRelease_id();
-    val action = request.getAction();
-
-    switch(action) {
-
-      case status:
-        // No action to take
-        break;
-
-      case initialize:
-        log.debug("ETL Manager: Initialize action for " + request.getTask_id());
-        try{
-          val task = registerTask(taskId, releaseId);
-          task.handleAction(action);
-        } catch (Throwable t){
-          log.error("ETL Manager: Failed to initialize task request {}: [{}] -> {}",
-              request, t.getClass().getSimpleName(), t.getMessage());
-          throw t;
-        }
-        break;
-      default:
-        log.debug("ETL Manager: Action for " + request.getTask_id() + ": " + action.name());
-        checkTaskExists(taskId);
-        val existingTask = tasks.get(taskId);
-        if (existingTask != null) {
-          existingTask.handleAction(action);
-        }
-        break;
-    }
-  }
-
-  public Task getTask(String taskId) {
-    checkTaskExists(taskId);
-    return tasks.get(taskId);
   }
 
   private void checkTaskDataMatches(Task existingTask, Task requestedTask){
