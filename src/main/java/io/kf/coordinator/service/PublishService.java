@@ -5,18 +5,24 @@ import io.kf.coordinator.model.PublishReleaseError;
 import io.kf.coordinator.model.rollcall.AliasCandidate;
 import io.kf.coordinator.model.rollcall.ConfiguredAlias;
 import io.kf.coordinator.model.rollcall.RollCallRequest;
+import io.kf.coordinator.utils.RestClient;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkState;
+import static io.kf.coordinator.utils.RestClient.tryNotFoundRequest;
 import static io.kf.coordinator.utils.Collectors.toImmutableList;
 import static io.kf.coordinator.utils.Collectors.toImmutableSet;
+import static io.kf.coordinator.utils.Joiners.PATH;
 import static io.kf.coordinator.utils.Joiners.UNDERSCORE;
 import static java.util.stream.Collectors.joining;
 
@@ -25,19 +31,45 @@ import static java.util.stream.Collectors.joining;
 public class PublishService {
 
   private static final String PADDED_PIPE = " | ";
-  private final RollCallClient client;
+
+  private static final String RELEASE_ENDPOINT = "aliases/release";
+  private static final String CANDIDATE_ENDPOINT = "aliases/candidates";
+
+  private final String serverUrl;
+  private final RestClient rest;
 
   @Autowired
-  public PublishService(@NonNull RollCallClient client){
-    this.client = client;
+  public PublishService(
+      @Value("${rollcall.url}")
+      @NonNull String serverUrl,
+      @NonNull RestClient rollCallRestClient) {
+    this.serverUrl = serverUrl;
+    this.rest = rollCallRestClient;
   }
 
-  public void publishRelease(@NonNull String release, @NonNull Set<String> studies){
-    val candidates = client.getAliasCandidates();
+  public void publishRelease(@NonNull String accessToken, @NonNull String release, @NonNull Set<String> studies){
+    val candidates = getAliasCandidates(accessToken);
     val errors = validateCandidates(candidates, release, studies);
     checkState(errors.isEmpty(), buildErrorMessage(errors));
     buildRequests(extractAliases(candidates), release, studies)
-        .forEach(client::release);
+        .forEach(x -> release(accessToken, x));
+  }
+
+  private List<AliasCandidate> getAliasCandidates(String accessToken){
+    return rest.gets(accessToken, getCandidatesUrl(), AliasCandidate.class).getBody();
+  }
+
+  private Optional<Boolean> release(String accessToken, @NonNull RollCallRequest request) {
+    return tryNotFoundRequest(() -> rest.post(accessToken, getReleaseUrl(), request, Boolean.class))
+        .map(HttpEntity::getBody);
+  }
+
+  private String getReleaseUrl(){
+    return PATH.join(serverUrl, RELEASE_ENDPOINT);
+  }
+
+  private String getCandidatesUrl(){
+    return PATH.join(serverUrl, CANDIDATE_ENDPOINT);
   }
 
   List<PublishReleaseError> validateCandidates(List<AliasCandidate> aliasCandidates, String expectedRelease,

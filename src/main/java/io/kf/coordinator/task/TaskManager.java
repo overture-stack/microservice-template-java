@@ -3,7 +3,8 @@ package io.kf.coordinator.task;
 import io.kf.coordinator.exceptions.TaskException;
 import io.kf.coordinator.exceptions.TaskManagerException;
 import io.kf.coordinator.exceptions.TaskNotFoundException;
-import io.kf.coordinator.model.TasksRequest;
+import io.kf.coordinator.model.AuthorizedTaskRequest;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -26,10 +27,11 @@ public abstract class TaskManager {
    */
   private Map<String, Task> tasks = new HashMap<>();
 
-  public void dispatch(TasksRequest request) {
+  public void dispatch(@NonNull AuthorizedTaskRequest request) {
     val taskId = request.getTask_id();
     val releaseId = request.getRelease_id();
     val action = request.getAction();
+    val accessToken = request.getAccessToken();
 
     switch(action) {
 
@@ -40,8 +42,8 @@ public abstract class TaskManager {
       case initialize:
         log.debug("{} Initialize action for {}", ETL_MANAGER, request.getTask_id());
         try{
-          val task = registerTask(taskId, releaseId);
-          task.handleAction(action);
+          val task = registerTask(accessToken, taskId, releaseId);
+          task.handleAction(action, accessToken);
         } catch (Throwable t){
           log.error("{} Failed to initialize task request {}: [{}] -> {}",
               ETL_MANAGER, request, t.getClass().getSimpleName(), t.getMessage());
@@ -53,7 +55,7 @@ public abstract class TaskManager {
         checkTaskExists(taskId);
         val existingTask = tasks.get(taskId);
         if (existingTask != null) {
-          existingTask.handleAction(action);
+          existingTask.handleAction(action, accessToken);
         }
         break;
     }
@@ -96,9 +98,9 @@ public abstract class TaskManager {
    * If the task does not exist, create it and register it. If it does, ensure the important bits of information in the task request by the user matches what is persisted/stored in the manager, and just return that
    * @throws TaskManagerException if task exists but does not match some of the data stored, or if the newly created task is null
    */
-  private Task registerTask(String taskId, String releaseId){
+  private Task registerTask(String accessToken, String taskId, String releaseId){
     val existingTaskResult = findTask(taskId);
-    val newTask = createTask(taskId, releaseId);
+    val newTask = createTask(accessToken, taskId, releaseId);
     Task task;
     if (existingTaskResult.isPresent()){
       val existingTask = existingTaskResult.get();
@@ -113,6 +115,6 @@ public abstract class TaskManager {
     return task;
   }
 
-  protected abstract Task createTask(String taskId, String releaseId) throws TaskException;
+  protected abstract Task createTask(String accessToken, String taskId, String releaseId) throws TaskException;
 
 }

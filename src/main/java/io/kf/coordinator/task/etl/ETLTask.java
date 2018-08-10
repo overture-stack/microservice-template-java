@@ -29,13 +29,17 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 @Slf4j
 public class ETLTask extends Task {
 
+  /**
+   * Config
+   */
+  @Getter private final Set<String> studies;
+  @Getter @JsonIgnore private final String displayName;
+
+  /**
+   * Dependencies
+   */
   private final ETLDockerContainer etl;
   private final PublishService publishService;
-  @Getter private final Set<String> studies;
-
-  @Getter
-  @JsonIgnore
-  private final String displayName;
 
   public ETLTask(@NonNull ETLDockerContainer etl,
       @NonNull PublishService publishService,
@@ -50,7 +54,6 @@ public class ETLTask extends Task {
   }
 
   //TODO: sanitize studyIds and release at instantiation phase and if not good, put in REJECT state
-
   @Override
   public void initialize() {
     log.info("{} Initializing ...", getDisplayName());
@@ -118,12 +121,13 @@ public class ETLTask extends Task {
     return stateMachine.getState().getId();
   }
 
+  @Override
   public void fail() {
     sendEvent(FAIL, new EventCallback() {
 
       @Override public void onRun() throws Throwable {
         etl.killAndRemove();
-        log.info("Killed and removed {}", getDisplayName());
+        log.info("{} failed. Killing and removing it", getDisplayName());
       }
 
       @Override public void onError(Throwable t) {
@@ -134,13 +138,14 @@ public class ETLTask extends Task {
     });
   }
 
+
   @Override
-  public void publish() {
+  public void publish(@NonNull String accessToken) {
     log.info("{} Publishing ...", getDisplayName());
     sendEvent(PUBLISH, new EventCallback() {
 
       @Override public void onRun() throws Throwable {
-        publishService.publishRelease(getRelease(), getStudies());
+        publishService.publishRelease(accessToken , getRelease(), getStudies());
         sendEvent(PUBLISHING_DONE);
         log.info("{} -> PUBLISHED.", getDisplayName());
         log.info("{} Cleaning up....", getDisplayName());

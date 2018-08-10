@@ -12,6 +12,7 @@ import org.springframework.statemachine.StateMachine;
 public abstract class Task {
 
   protected StateMachine<TaskFSMStates, TaskFSMEvents> stateMachine;
+
   @NonNull
   @Getter
   protected String id;
@@ -25,7 +26,7 @@ public abstract class Task {
     stateMachine = TaskFSMGenerator.generate();
   }
 
-  public void handleAction(TaskAction action) {
+  public void handleAction(@NonNull TaskAction action, String accessToken) {
     switch(action) {
       case initialize:
         this.initialize();
@@ -37,15 +38,16 @@ public abstract class Task {
         this.run();
         break;
       case publish:
-        this.publish();
+        this.publish(accessToken);
         break;
     }
   }
 
   public abstract void initialize();
   public abstract void run();
-  public abstract void publish();
+  public abstract void publish(String accessToken);
   public abstract void cancel();
+  public abstract void fail();
 
   public TaskFSMStates getState() {
     return stateMachine.getState().getId();

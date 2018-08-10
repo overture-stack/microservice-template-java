@@ -42,7 +42,6 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -61,18 +60,6 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Value("${auth.jwt.publicKeyUrl}")
   private String publicKeyUrl;
-
-  @Value("${rollcall.auth.enable}")
-  private boolean enableRollCallAuth;
-
-  @Value("${rollcall.auth.token}")
-  private String rollCallAccessToken;
-
-  @Value("${release-coordinator.auth.enable}")
-  private boolean enableReleaseCoordinatorAuth;
-
-  @Value("${release-coordinator.auth.token}")
-  private String releaseCoordinatorAccessToken;
 
   @Override
   @SneakyThrows
@@ -114,24 +101,6 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
     val defaultTokenServices = new DefaultTokenServices();
     defaultTokenServices.setTokenStore(tokenStore());
     return defaultTokenServices;
-  }
-
-  @Bean
-  public RestTemplate rollCallTemplate(){
-    if (enableRollCallAuth){
-      return new RestTemplate(clientHttpRequestFactory(rollCallAccessToken));
-    } else {
-      return new RestTemplate();
-    }
-  }
-
-  @Bean
-  public RestTemplate releaseCoordinatorTemplate(){
-    if (enableReleaseCoordinatorAuth){
-      return new RestTemplate(clientHttpRequestFactory(releaseCoordinatorAccessToken));
-    } else {
-      return new RestTemplate();
-    }
   }
 
   /**
