@@ -31,7 +31,6 @@ import static java.util.stream.Collectors.joining;
 public class PublishService {
 
   private static final String PADDED_PIPE = " | ";
-
   private static final String RELEASE_ENDPOINT = "aliases/release";
   private static final String CANDIDATE_ENDPOINT = "aliases/candidates";
 
