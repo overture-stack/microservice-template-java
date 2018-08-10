@@ -5,7 +5,6 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import io.kf.coordinator.config.ETLDockerContainerConfig;
 import io.kf.coordinator.exceptions.TaskException;
-import io.kf.coordinator.model.ReleaseResponse;
 import io.kf.coordinator.service.PublishService;
 import io.kf.coordinator.service.ReleaseService;
 import io.kf.coordinator.task.Task;
@@ -41,9 +40,8 @@ public class ETLTaskManager extends TaskManager {
   }
 
   @Override
-  protected Task createTask(@NonNull String taskId, @NonNull String releaseId) throws TaskException {
-    val studyIds = releaseService.getRelease(releaseId)
-        .map(ReleaseResponse::getStudies)
+  protected Task createTask(@NonNull String accessToken, @NonNull String taskId, @NonNull String releaseId) throws TaskException {
+    val studyIds = releaseService.getStudies(accessToken, releaseId)
         .orElseThrow(
             () -> new TaskException(format("ETL Task ERROR[%s]: The release '%s' was not found", taskId, releaseId))
         );

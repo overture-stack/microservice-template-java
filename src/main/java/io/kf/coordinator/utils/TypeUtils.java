@@ -16,15 +16,17 @@
 
 package io.kf.coordinator.utils;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.val;
 
+import static com.fasterxml.jackson.core.JsonGenerator.Feature.IGNORE_UNKNOWN;
 
 public class TypeUtils {
+
   public static  <T> T convertType(Object fromObject, Class<T> tClass){
     val mapper = new ObjectMapper();
-    mapper.configure(JsonGenerator.Feature.IGNORE_UNKNOWN, true);
+    mapper.configure(IGNORE_UNKNOWN, true);
     return mapper.convertValue(fromObject, tClass);
   }
+
 }

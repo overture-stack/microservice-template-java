@@ -10,14 +10,12 @@ release-coordinator:
   # used to make secure REST calls to release coordinator
   auth:
     enable: false
-    token: sdfnu238o9jfsd
 
 rollcall:
   url: http://localhost:8080
   # used to make secure REST calls to rollcall
   auth:
-    enable: false
-    token: sdfjklskdf90jiol2jkn
+    enable: true
 
 docker:
   image:
