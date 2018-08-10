@@ -31,19 +31,6 @@ public class RestClient {
   @NonNull private final RestTemplate template;
   private final boolean useAuth;
 
-  public static <T> Optional<ResponseEntity<T>> tryNotFoundRequest(Supplier<ResponseEntity<T>> restCallback){
-    ResponseEntity<T> response;
-    try{
-      response = restCallback.get();
-    } catch (HttpClientErrorException e){
-      if (e.getRawStatusCode() == NOT_FOUND.getStatusCode()){
-        return Optional.empty();
-      }
-      throw e;
-    }
-    return Optional.of(response);
-  }
-
   public <R> ResponseEntity<R> get(String accessToken, @NonNull String url, @NonNull Class<R> responseType){
     return template.exchange(url, GET, emptyEntity(accessToken), responseType);
   }
@@ -88,6 +75,19 @@ public class RestClient {
     return headers;
   }
 
+  public static <T> Optional<ResponseEntity<T>> tryNotFoundRequest(Supplier<ResponseEntity<T>> restCallback){
+    ResponseEntity<T> response;
+    try{
+      response = restCallback.get();
+    } catch (HttpClientErrorException e){
+      if (e.getRawStatusCode() == NOT_FOUND.getStatusCode()){
+        return Optional.empty();
+      }
+      throw e;
+    }
+    return Optional.of(response);
+  }
+
   private static <T> ParameterizedTypeReference<T> createListParameterizedTypeReference(@NonNull Class<?> elementType){
     return new ParameterizedTypeReference<T>() {
 
@@ -101,6 +101,5 @@ public class RestClient {
       }
     };
   }
-
 
 }
