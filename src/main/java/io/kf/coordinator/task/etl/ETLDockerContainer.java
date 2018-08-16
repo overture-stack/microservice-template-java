@@ -38,7 +38,6 @@ public class ETLDockerContainer {
   private final String dockerImage;
   private final boolean useLocal;
   private final Path etlConfFile;
-  private final Path etlJarFile;
   private final String networkId;
 
   /**
@@ -59,14 +58,12 @@ public class ETLDockerContainer {
       @NonNull String dockerImage,
       boolean useLocal,
       @NonNull String etlConfFilePath,
-      @NonNull String etlJarFilePath,
       @NonNull String networkId,
       @NonNull DockerClient docker
   ) throws InterruptedException, DockerException {
     this.dockerImage = dockerImage;
     this.useLocal = useLocal;
     this.etlConfFile = getConfFile(etlConfFilePath);
-    this.etlJarFile = getJarFile(etlJarFilePath);
     this.docker = docker;
     this.networkId = networkId;
     initImage();
@@ -78,7 +75,6 @@ public class ETLDockerContainer {
     log.info("Creating ETLContainer with releaseId '{}'", releaseId);
     val hostConfig = HostConfig.builder()
         .appendBinds(getMountBind(etlConfFile, CONTAINER_CONF_LOC))
-        .appendBinds(getMountBind(etlJarFile, CONTAINER_JAR_LOC))
         .build();
 
     // Create container with exposed ports
