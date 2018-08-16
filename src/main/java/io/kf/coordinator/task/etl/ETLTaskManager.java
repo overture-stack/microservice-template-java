@@ -65,7 +65,6 @@ public class ETLTaskManager extends TaskManager {
         config.getDockerImage(),
         config.isUseLocal(),
         config.getEtlConfFilePath(),
-        config.getEtlJarFilePath(),
         config.getNetworkId(),
         docker );
   }

@@ -26,4 +26,3 @@ docker:
     id: default
   input:
     conf: <path to kf_etl.conf file>
-    jar: <path to kf-portal-etl.jar file>

@@ -21,9 +21,6 @@ public class ETLDockerContainerConfig {
   @Value("${docker.input.conf}")
   private String etlConfFilePath;
 
-  @Value("${docker.input.jar}")
-  private String etlJarFilePath;
-
   @Value("${docker.network.id}")
   private String networkId;
 
