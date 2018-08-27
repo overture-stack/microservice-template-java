@@ -30,7 +30,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.R
 @EnableResourceServer
 @EnableWebSecurity
 @Profile("test")
-public class TestWebConfig extends ResourceServerConfigurerAdapter {
+public class TestWebSecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Override
   @SneakyThrows
