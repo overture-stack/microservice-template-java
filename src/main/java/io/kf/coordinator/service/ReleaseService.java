@@ -34,7 +34,7 @@ public class ReleaseService {
     return getRelease(accessToken, releaseId).map(ReleaseResponse::getStudies);
   }
 
-  private Optional<ReleaseResponse> getRelease(String accessToken, @NonNull String releaseId){
+  private Optional<ReleaseResponse> getRelease(String accessToken, @NonNull String releaseId) {
     return tryNotFoundRequest(() -> rest.get(accessToken, getReleaseUrl(releaseId), ReleaseResponse.class))
         .map(HttpEntity::getBody);
   }

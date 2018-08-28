@@ -44,7 +44,7 @@ public class ETLCoordinatorTaskController {
   public @ResponseBody
   TasksDTO tasks(
       @RequestBody(required = true) TasksRequest request,
-      @RequestHeader(AUTHORIZATION) String accessToken
+      @RequestHeader(value = AUTHORIZATION, defaultValue = "") String accessToken
   ) {
 
     taskManager.dispatch(
