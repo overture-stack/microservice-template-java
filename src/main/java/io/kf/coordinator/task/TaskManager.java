@@ -35,7 +35,7 @@ public abstract class TaskManager {
 
     switch(action) {
 
-      case status:
+      case get_status:
         // No action to take
         break;
 
