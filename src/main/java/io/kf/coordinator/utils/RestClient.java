@@ -60,7 +60,12 @@ public class RestClient {
   }
 
   private <T> HttpEntity<T> buildEntity(String accessToken, T body){
-    return new HttpEntity<>(body, buildHttpHeader(accessToken));
+    HttpEntity<T> output =
+            accessToken == null
+            ? new HttpEntity<>(body, buildHttpHeader(accessToken))
+            : new HttpEntity<>(body);
+
+    return output;
   }
 
   private HttpHeaders buildHttpHeader(String accessToken){
