@@ -7,7 +7,6 @@ import io.kf.coordinator.model.dto.TasksDTO;
 import io.kf.coordinator.task.TaskAction;
 import io.kf.coordinator.task.etl.ETLTaskManager;
 import io.kf.coordinator.task.fsm.states.TaskFSMStates;
-import lombok.experimental.var;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,7 +66,7 @@ public class ETLCoordinatorTaskController {
     // Release coordinator cannot handle the staged->published transition, need to make them sync up by passing "PUBLISHING"
     // The actual "PUBLISHED" state will be retrieved by their query.
     // TODO: Remove this hack. Potentially run the publish service asynchronously
-    var state = task.getState();
+    TaskFSMStates state = task.getState();
     if (request.getAction().equals(TaskAction.publish) && state.equals(PUBLISHED)) {
       state = PUBLISHING;
     }
