@@ -4,7 +4,10 @@ import io.kf.coordinator.model.AuthorizedTaskRequest;
 import io.kf.coordinator.model.TasksRequest;
 import io.kf.coordinator.model.dto.StatusDTO;
 import io.kf.coordinator.model.dto.TasksDTO;
+import io.kf.coordinator.task.TaskAction;
 import io.kf.coordinator.task.etl.ETLTaskManager;
+import io.kf.coordinator.task.fsm.states.TaskFSMStates;
+import lombok.experimental.var;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +21,8 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
+import static io.kf.coordinator.task.fsm.states.TaskFSMStates.PUBLISHED;
+import static io.kf.coordinator.task.fsm.states.TaskFSMStates.PUBLISHING;
 
 @RestController
 public class ETLCoordinatorTaskController {
@@ -55,13 +60,22 @@ public class ETLCoordinatorTaskController {
             .accessToken(accessToken)
             .build());
 
+    // TODO: Handle task == null case
     val task = taskManager.getTask(request.getTask_id());
 
-    // TODO: Handle task == null case
+    // Temporary hack - publish action should return "Publishing" not "Published"
+    // Release coordinator cannot handle the staged->published transition, need to make them sync up by passing "PUBLISHING"
+    // The actual "PUBLISHED" state will be retrieved by their query.
+    // TODO: Remove this hack. Potentially run the publish service asynchronously
+    var state = task.getState();
+    if (request.getAction().equals(TaskAction.publish) && state.equals(PUBLISHED)) {
+      state = PUBLISHING;
+    }
+
     return TasksDTO.builder()
         .task_id(request.getTask_id())
         .release_id(task.getRelease())
-        .state(task.getState())
+        .state(state)
         .progress(task.getProgress())
         .build();
   }
