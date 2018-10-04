@@ -9,7 +9,7 @@ This template provides the following:
 
 * Spring-Boot Application with Spring Security
 * JWT Authorization
-* JWT Asymmetric Verificaiton - fetches public-key from web on start-up
+* JWT Asymmetric Verification - fetches public-key from web on start-up
 * JWT Filter - User Role and Status requirements implemented by default
 * Docker and Docker-Compose configuration 
 
