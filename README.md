@@ -110,7 +110,7 @@ The task runner provides 2 services that can be called by the Release Coordinato
   * Begin Staging or Publishing existing Task
   * Query Status of Task by task ID
 
-Api Specifications can be found [here](https://kids-first.github.io/kf-api-release-coordinator/docs/coordinator.html#section/Coordinator-and-Task-Services).
+Api Specifications can be found [here](https://kids-first.github.io/kf-api-release-coordinator/docs/task.html).
 
 ## Acknowledgements
 
