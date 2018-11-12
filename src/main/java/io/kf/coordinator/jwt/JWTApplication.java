@@ -16,9 +16,19 @@
 
 package io.kf.coordinator.jwt;
 
-import java.util.Optional;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Data;
 
-public interface JWTFacadeInterface {
-  Optional<JWTUser> getUser();
-  Optional<JWTApplication> getApplication();
+import java.util.List;
+
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+class JWTApplication {
+
+  private String name;
+  private String clientId;
+  private String redirectUri;
+  private String status;
+  private List<String> groups;
+
 }
