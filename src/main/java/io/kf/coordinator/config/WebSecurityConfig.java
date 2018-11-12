@@ -63,6 +63,9 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
   @Value("${auth.jwt.publicKeyUrl}")
   private String publicKeyUrl;
 
+  @Value("${auth.jwt.resourceId}")
+  private String resourceId;
+
   @Override
   @SneakyThrows
   public void configure(HttpSecurity http) {
@@ -82,7 +85,10 @@ public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
 
   @Override
   public void configure(ResourceServerSecurityConfigurer config) {
-    config.tokenServices(tokenServices());
+    config
+        .resourceId(resourceId)
+        .tokenServices(tokenServices());
+
   }
 
   @Bean

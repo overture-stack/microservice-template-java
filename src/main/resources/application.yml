@@ -3,7 +3,8 @@ server:
 
 auth:
   jwt:
-    publicKeyUrl: "http://localhost:8081/oauth/token/public_key"
+    resourceId: "release-coordinator"
+    publicKeyUrl: "https://ego-qa.kids-first.io/oauth/token/public_key"
 
 release-coordinator:
   url: https://kf-release-coord-qa.kidsfirstdrc.org

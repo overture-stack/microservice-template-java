@@ -23,7 +23,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class JWTUser {
+class JWTUser {
 
   private String name;
   private String firstName;

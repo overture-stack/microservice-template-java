@@ -26,17 +26,26 @@ import java.util.Optional;
 @Component
 public class JWTFacade implements JWTFacadeInterface {
 
-  @Override
-  public Optional<JWTUser> getUser() {
+  private JWTDetails getJwtDetails() {
     try {
       val details = (OAuth2AuthenticationDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
-      val userDetails = (JWTUser) details.getDecodedDetails();
+      val jwtDetails = (JWTDetails) details.getDecodedDetails();
 
-      return Optional.of(userDetails);
+      return jwtDetails;
 
     } catch (Exception e) {
-      return Optional.empty();
+      return new JWTDetails();
     }
+  }
 
+  @Override
+  public Optional<JWTUser> getUser() {
+    return getJwtDetails().getUser();
+
+  }
+
+  @Override
+  public Optional<JWTApplication> getApplication() {
+    return getJwtDetails().getApplication();
   }
 }
