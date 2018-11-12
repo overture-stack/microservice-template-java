@@ -16,6 +16,7 @@
 
 package io.kf.coordinator.jwt;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -26,11 +27,12 @@ import org.springframework.web.filter.GenericFilterBean;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import java.util.*;
 
 @Slf4j
 public class JWTAuthorizationFilter extends GenericFilterBean {
 
-  private final String REQUIRED_ROLE = "USER";
+  private final Set<String> APPROVED_ROLES = new HashSet<>(Arrays.asList("ADMIN"));
   private final String REQUIRED_STATUS = "Approved";
 
   @Override
@@ -40,17 +42,37 @@ public class JWTAuthorizationFilter extends GenericFilterBean {
     if(authentication != null) {
 
       val details = (OAuth2AuthenticationDetails) authentication.getDetails();
-      val user = (JWTUser) details.getDecodedDetails();
+      val jwtDetails = (JWTDetails)details.getDecodedDetails();
 
-      boolean hasCorrectRole = user.getRoles().contains(REQUIRED_ROLE);
-      boolean hasCorrectStatus = user.getStatus().equalsIgnoreCase(REQUIRED_STATUS);
-
-      if(!hasCorrectRole || !hasCorrectStatus) {
+      if(!validateTokenDetails(jwtDetails)) {
         SecurityContextHolder.clearContext();
       }
     }
 
     chain.doFilter(request, response);
+  }
+
+  private boolean validateTokenDetails(@NonNull JWTDetails jwtDetails) {
+    return (validateUser(jwtDetails.getUser()) || validateApplication(jwtDetails.getApplication()));
+  }
+
+  private boolean validateUser(Optional<JWTUser> maybeUser) {
+    // User must have User role and Approved status
+
+    return maybeUser
+        .filter(
+          user ->
+            !Collections.disjoint(user.getRoles(), APPROVED_ROLES) &&
+            user.getStatus().equalsIgnoreCase(REQUIRED_STATUS)
+        )
+        .isPresent();
+  }
+
+  private boolean validateApplication(Optional<JWTApplication> maybeApp) {
+    // Application must have Approved status
+    return maybeApp
+        .filter(app -> app.getStatus().equalsIgnoreCase(REQUIRED_STATUS))
+        .isPresent();
   }
 
 }

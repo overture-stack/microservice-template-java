@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class JWTTokenConverter extends JwtAccessTokenConverter {
@@ -30,19 +31,30 @@ public class JWTTokenConverter extends JwtAccessTokenConverter {
   public JWTTokenConverter(String publicKey) {
     super();
     this.setVerifierKey(publicKey);
+
   }
 
   @Override
   public OAuth2Authentication extractAuthentication(Map<String, ?> map) {
     OAuth2Authentication authentication = super.extractAuthentication(map);
 
-    val context = (Map<String, ?>)map.get("context");
-    val user = (Map<String, ?>)context.get("user");
-    val jwtUser = TypeUtils.convertType(user, JWTUser.class);
+    val jwtContext = new JWTDetails();
+    val authContext = (Map<String, ?>)map.get("context");
 
-    authentication.setDetails(jwtUser);
+    if (authContext.containsKey("user")){
+      val user = (Map<String, ?>)authContext.get("user");
+      val jwtUser = TypeUtils.convertType(user, JWTUser.class);
+      jwtContext.setUser(Optional.of(jwtUser));
+    }
+    else if (authContext.containsKey("application")) {
+      val application = (Map<String, ?>)authContext.get("application");
+      val jwtApplication = TypeUtils.convertType(application, JWTApplication.class);
+      jwtContext.setApplication(Optional.of(jwtApplication));
+    }
 
+    authentication.setDetails(jwtContext);
     return authentication;
+
   }
 
 }
