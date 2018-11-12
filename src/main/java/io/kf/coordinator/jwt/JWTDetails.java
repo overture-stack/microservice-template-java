@@ -14,5 +14,4 @@ class JWTDetails {
     this.application = Optional.empty();
     this.user = Optional.empty();
   }
-
 }

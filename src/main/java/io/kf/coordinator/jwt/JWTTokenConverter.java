@@ -31,7 +31,6 @@ public class JWTTokenConverter extends JwtAccessTokenConverter {
   public JWTTokenConverter(String publicKey) {
     super();
     this.setVerifierKey(publicKey);
-
   }
 
   @Override
@@ -54,7 +53,5 @@ public class JWTTokenConverter extends JwtAccessTokenConverter {
 
     authentication.setDetails(jwtContext);
     return authentication;
-
   }
-
 }

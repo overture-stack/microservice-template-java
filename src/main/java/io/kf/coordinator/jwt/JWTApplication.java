@@ -25,7 +25,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 class JWTApplication {
 
-
   private String name;
   private String clientId;
   private String redirectUri;
