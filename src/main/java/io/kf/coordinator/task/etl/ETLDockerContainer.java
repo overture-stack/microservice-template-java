@@ -29,7 +29,7 @@ public class ETLDockerContainer {
 
   private static final String STUDY_ID_ENV_VAR = "KF_STUDY_ID";
   private static final String RELEASE_ID_ENV_VAR = "KF_RELEASE_ID";
-  private static final String CONTAINER_CONF_LOC = "/kf-etl/mnt/conf/kf_etl.conf";
+  private static final String CONTAINER_CONF_LOC = "/kf-etl/conf/kf_etl.conf";
   private static final String CONTAINER_JAR_LOC = "/kf-etl/mnt/lib/kf-portal-etl.jar";
 
   /**
