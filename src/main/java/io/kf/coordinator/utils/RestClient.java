@@ -60,12 +60,12 @@ public class RestClient {
   }
 
   private <T> HttpEntity<T> buildEntity(String accessToken, T body){
-    val emptyHeaders = new HttpHeaders();
-    emptyHeaders.setContentType(APPLICATION_JSON_UTF8);
+    HttpEntity<T> output =
+            accessToken == null
+            ? new HttpEntity<>(body, buildHttpHeader(accessToken))
+            : new HttpEntity<>(body);
 
-    return accessToken == null ?
-            new HttpEntity<>(body, emptyHeaders) : new HttpEntity<>(body, buildHttpHeader(accessToken));
-
+    return output;
   }
 
   private HttpHeaders buildHttpHeader(String accessToken){
