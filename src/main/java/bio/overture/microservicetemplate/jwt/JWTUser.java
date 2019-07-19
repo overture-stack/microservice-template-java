@@ -31,6 +31,7 @@ public class JWTUser {
   private String createdAt;
   private String lastLogin;
   private String preferredLanguage;
-  private List<String> roles;
+  private String type;
+  private List<String> permissions;
 
 }
