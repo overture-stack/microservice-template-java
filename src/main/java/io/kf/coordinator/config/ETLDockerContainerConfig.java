@@ -24,6 +24,12 @@ public class ETLDockerContainerConfig {
   @Value("${docker.network.id}")
   private String networkId;
 
+  @Value("${docker.driver.memory}")
+  private String driverMemory;
+
+  @Value("${docker.executor.memory}")
+  private String executorMemory;
+
   @Bean
   @SneakyThrows
   public DockerClient docker(){

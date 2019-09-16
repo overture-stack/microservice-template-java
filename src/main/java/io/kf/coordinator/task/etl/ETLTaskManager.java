@@ -66,6 +66,8 @@ public class ETLTaskManager extends TaskManager {
         config.isUseLocal(),
         config.getEtlConfFilePath(),
         config.getNetworkId(),
+        config.getDriverMemory(),
+        config.getExecutorMemory(),
         docker );
   }
 
