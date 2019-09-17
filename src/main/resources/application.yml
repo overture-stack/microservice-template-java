@@ -4,7 +4,7 @@ server:
 auth:
   jwt:
     resourceId: "release-coordinator"
-    publicKeyUrl: "https://ego-qa.kids-first.io/oauth/token/public_key"
+    publicKeyUrl: "https://ego-qa.kidsfirstdrc.org/oauth/token/public_key"
 
 release-coordinator:
   url: https://kf-release-coord-qa.kidsfirstdrc.org
@@ -25,5 +25,9 @@ docker:
     id: <docker images | head -2 | tail -1>
   network:
     id: default
+  driver:
+    memory: 1g
+  executor:
+    memory: 1g
   input:
     conf: <path to kf_etl.conf file>

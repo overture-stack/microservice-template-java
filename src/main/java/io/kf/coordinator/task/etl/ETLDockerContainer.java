@@ -29,6 +29,8 @@ public class ETLDockerContainer {
 
   private static final String STUDY_ID_ENV_VAR = "KF_STUDY_ID";
   private static final String RELEASE_ID_ENV_VAR = "KF_RELEASE_ID";
+  private static final String DRIVER_MEMORY_ENV_VAR = "KF_DRIVER_MEMORY";
+  private static final String EXECUTOR_MEMORY_ENV_VAR = "KF_EXECUTOR_MEMORY";
   private static final String CONTAINER_CONF_LOC = "/kf-etl/conf/kf_etl.conf";
   private static final String CONTAINER_JAR_LOC = "/kf-etl/mnt/lib/kf-portal-etl.jar";
 
@@ -39,6 +41,8 @@ public class ETLDockerContainer {
   private final boolean useLocal;
   private final Path etlConfFile;
   private final String networkId;
+  private final String driverMemory;
+  private final String executorMemory;
 
   /**
    * Dependencies
@@ -59,6 +63,8 @@ public class ETLDockerContainer {
       boolean useLocal,
       @NonNull String etlConfFilePath,
       @NonNull String networkId,
+      @NonNull String driverMemory,
+      @NonNull String executorMemory,
       @NonNull DockerClient docker
   ) throws InterruptedException, DockerException {
     this.dockerImage = dockerImage;
@@ -66,6 +72,8 @@ public class ETLDockerContainer {
     this.etlConfFile = getConfFile(etlConfFilePath);
     this.docker = docker;
     this.networkId = networkId;
+    this.driverMemory = driverMemory;
+    this.executorMemory = executorMemory;
     initImage();
     log.info("Instantiated ETL Container controller with image '{}' and network '{}'", dockerImage, networkId);
   }
@@ -83,7 +91,9 @@ public class ETLDockerContainer {
         .image(dockerImage)
         .env(
             getEnvTerm(RELEASE_ID_ENV_VAR, releaseId),
-            getEnvTerm(STUDY_ID_ENV_VAR, WHITESPACE.join(studyIds))
+            getEnvTerm(STUDY_ID_ENV_VAR, WHITESPACE.join(studyIds)),
+            getEnvTerm(DRIVER_MEMORY_ENV_VAR, this.driverMemory),
+            getEnvTerm(EXECUTOR_MEMORY_ENV_VAR, this.executorMemory)
         )
         .build();
 
