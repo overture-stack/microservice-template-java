@@ -4,9 +4,6 @@ server:
 auth0:
   issuer: "https://kids-first.auth0.com/"
   apiAudience: "https://kf-release-coord.kidsfirstdrc.org"
-  jwt:
-    resourceId: "release-coordinator"
-    publicKeyUrl: "https://ego-qa.kidsfirstdrc.org/oauth/token/public_key"
 
 release-coordinator:
   url: https://kf-release-coord-qa.kidsfirstdrc.org
