@@ -16,143 +16,46 @@
 
 package io.kf.coordinator.config;
 
+import com.auth0.spring.security.api.JwtWebSecurityConfigurer;
 import io.kf.coordinator.jwt.JWTAuthorizationFilter;
-import io.kf.coordinator.jwt.JWTTokenConverter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.apache.http.client.HttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicHeader;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
-import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
-import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
-import static java.lang.String.format;
-import static java.util.Collections.singletonList;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-
 @Slf4j
-@EnableWebSecurity
-@EnableResourceServer
+@EnableWebSecurity(debug = true)
 @Profile("!test")
-public class WebSecurityConfig extends ResourceServerConfigurerAdapter {
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-  @Autowired
-  private ResourceLoader resourceLoader;
+  @Value("${auth0.apiAudience}")
+  private String audience;
 
-  @Value("${auth.jwt.publicKeyUrl}")
-  private String publicKeyUrl;
-
-  @Value("${auth.jwt.resourceId}")
-  private String resourceId;
+  @Value("${auth0.issuer}")
+  private String issuer;
 
   @Override
   @SneakyThrows
   public void configure(HttpSecurity http) {
-    http
-      .authorizeRequests()
-        .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**").permitAll()
-    .and()
-      .authorizeRequests()
-        .antMatchers(HttpMethod.POST).authenticated()
-    .and()
-      .authorizeRequests()
-        .anyRequest().authenticated()
-    .and()
-      .addFilterAfter(new JWTAuthorizationFilter(), BasicAuthenticationFilter.class);
+    JwtWebSecurityConfigurer
+            .forRS256(audience, issuer)
+            .configure(http)
+            .authorizeRequests()
+            .antMatchers("/swagger**", "/swagger-resources/**", "/v2/api**", "/webjars/**").permitAll()
+            .and()
+            .authorizeRequests()
+            .antMatchers(HttpMethod.POST).authenticated()
+            .and()
+            .authorizeRequests()
+            .anyRequest().authenticated()
+            .and()
+            .addFilterAfter(new JWTAuthorizationFilter(), BasicAuthenticationFilter.class);
 
-  }
-
-  @Override
-  public void configure(ResourceServerSecurityConfigurer config) {
-    config
-        .resourceId(resourceId)
-        .tokenServices(tokenServices());
-
-  }
-
-  @Bean
-  public TokenStore tokenStore() {
-    return new JwtTokenStore(accessTokenConverter());
-  }
-
-  @Bean
-  @SneakyThrows
-  public JwtAccessTokenConverter accessTokenConverter() {
-    return new JWTTokenConverter(fetchJWTPublicKey());
-  }
-
-
-  @Bean
-  @Primary
-  public DefaultTokenServices tokenServices() {
-    val defaultTokenServices = new DefaultTokenServices();
-    defaultTokenServices.setTokenStore(tokenStore());
-    return defaultTokenServices;
-  }
-
-  /**
-   * Call EGO server for public key to use when verifying JWTs
-   * Pass this value to the JWTTokenConverter
-   */
-  @SneakyThrows
-  private String fetchJWTPublicKey() {
-    val publicKeyResource = resourceLoader.getResource(publicKeyUrl);
-
-    val stringBuilder = new StringBuilder();
-    val reader = new BufferedReader(
-      new InputStreamReader(publicKeyResource.getInputStream()));
-
-    reader.lines().forEach(stringBuilder::append);
-    return stringBuilder.toString();
-  }
-
-  private HttpComponentsClientHttpRequestFactory clientHttpRequestFactory(String accessToken) {
-    val factory = new HttpComponentsClientHttpRequestFactory();
-    factory.setHttpClient(secureClient(accessToken));
-    return factory;
-  }
-
-  private HttpClient secureClient(String accessToken){
-    val client = HttpClients.custom();
-    configureOAuth(client, accessToken);
-    return client.build();
-  }
-
-  /**
-   * Populates Authorization header with OAuth token
-   * @param HttpClientBuilder instance to set Default Header on. Existing Headers will be overwritten.
-   */
-  private void configureOAuth(HttpClientBuilder client, String accessToken) {
-
-    val defined = (accessToken != null) && (!accessToken.isEmpty());
-    if (defined) {
-      log.trace("Setting access token: {}", accessToken);
-      client.setDefaultHeaders(singletonList(new BasicHeader(AUTHORIZATION, format("Bearer %s", accessToken))));
-    } else {
-      // Omit header if access token is null/empty in configuration (application.yml and conf/properties file
-      log.warn("No access token specified");
-    }
   }
 
 }
