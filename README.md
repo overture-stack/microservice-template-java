@@ -47,10 +47,15 @@ Initialize, Status, Run, Publish. These steps match the requests outlined in the
 The application can be run locally or in a docker container, the requirements for each setup are listed below.
 
 
-### EGO
-A running instance of [EGO](https://github.com/overture-stack/ego/) is required to generate the Authorization tokens and to provide the verification key.
+### Auth0
+This application required a valid Auth0 token. Auth0 can be configured through the configuration :
+```
+auth0:
+  issuer: "https://kids-first.auth0.com/"
+  apiAudience: "https://kf-release-coord.kidsfirstdrc.org"
+```
 
-[EGO](https://github.com/overture-stack/ego/) can be cloned and run locally if no public server is available. 
+Only token granted with type `client-credentials` are considered valid (see [Auth0 Documentation](https://auth0.com/docs/flows/concepts/client-credentials)
 
 
 ### Local

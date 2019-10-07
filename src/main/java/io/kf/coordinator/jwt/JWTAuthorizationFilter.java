@@ -16,25 +16,21 @@
 
 package io.kf.coordinator.jwt;
 
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import java.util.*;
-
 
 @Slf4j
 public class JWTAuthorizationFilter extends GenericFilterBean {
-
-  private final Set<String> APPROVED_ROLES = new HashSet<>(Arrays.asList("ADMIN"));
-  private final String REQUIRED_STATUS = "Approved";
 
   @Override
   @SneakyThrows
@@ -42,10 +38,9 @@ public class JWTAuthorizationFilter extends GenericFilterBean {
     val authentication = SecurityContextHolder.getContext().getAuthentication();
     if(authentication != null) {
 
-      val details = (OAuth2AuthenticationDetails) authentication.getDetails();
-      val jwtDetails = (JWTDetails)details.getDecodedDetails();
+      DecodedJWT details = (DecodedJWT) authentication.getDetails();
 
-      if(!validateTokenDetails(jwtDetails)) {
+      if(!validateTokenDetails(details)) {
         SecurityContextHolder.clearContext();
       }
     }
@@ -53,27 +48,9 @@ public class JWTAuthorizationFilter extends GenericFilterBean {
     chain.doFilter(request, response);
   }
 
-  private boolean validateTokenDetails(@NonNull JWTDetails jwtDetails) {
-    return (validateUser(jwtDetails.getUser()) || validateApplication(jwtDetails.getApplication()));
-  }
-
-  private boolean validateUser(Optional<JWTUser> maybeUser) {
-    // User must have User role and Approved status
-
-    return maybeUser
-        .filter(
-          user ->
-            !Collections.disjoint(user.getRoles(), APPROVED_ROLES) &&
-            user.getStatus().equalsIgnoreCase(REQUIRED_STATUS)
-        )
-        .isPresent();
-  }
-
-  private boolean validateApplication(Optional<JWTApplication> maybeApp) {
-    // Application must have Approved status
-    return maybeApp
-        .filter(app -> app.getStatus().equalsIgnoreCase(REQUIRED_STATUS))
-        .isPresent();
+  private boolean validateTokenDetails(@NonNull DecodedJWT jwtDetails) {
+    Claim gty = jwtDetails.getClaim("gty");
+    return !gty.isNull() && gty.asString().equals("client-credentials");
   }
 
 }

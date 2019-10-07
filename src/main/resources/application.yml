@@ -1,10 +1,9 @@
 server:
   port: 8088
 
-auth:
-  jwt:
-    resourceId: "release-coordinator"
-    publicKeyUrl: "https://ego-qa.kidsfirstdrc.org/oauth/token/public_key"
+auth0:
+  issuer: "https://kids-first.auth0.com/"
+  apiAudience: "https://kf-release-coord.kidsfirstdrc.org"
 
 release-coordinator:
   url: https://kf-release-coord-qa.kidsfirstdrc.org
