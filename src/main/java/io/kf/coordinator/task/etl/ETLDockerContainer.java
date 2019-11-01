@@ -92,8 +92,8 @@ public class ETLDockerContainer {
         .env(
             getEnvTerm(RELEASE_ID_ENV_VAR, releaseId),
             getEnvTerm(STUDY_ID_ENV_VAR, WHITESPACE.join(studyIds)),
-            getEnvTerm(DRIVER_MEMORY_ENV_VAR, this.driverMemory),
-            getEnvTerm(EXECUTOR_MEMORY_ENV_VAR, this.executorMemory)
+            format("%s=%s", DRIVER_MEMORY_ENV_VAR, this.driverMemory),
+            format("%s=%s", EXECUTOR_MEMORY_ENV_VAR, this.executorMemory)
         )
         .build();
 
