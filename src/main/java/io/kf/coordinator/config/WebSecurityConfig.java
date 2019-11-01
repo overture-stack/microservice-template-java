@@ -29,7 +29,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Slf4j
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity
 @Profile("!test")
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
